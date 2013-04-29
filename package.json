@@ -1,0 +1,26 @@
+{
+  "name": "local-context",
+  "version": "0.0.0",
+  "description": "userland implementation of https://github.com/joyent/node/issues/5243",
+  "main": "context.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "node test/simple.tap.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/othiym23/node-local-context.git"
+  },
+  "keywords": [
+    "threading",
+    "shared",
+    "context",
+    "domains",
+    "tracing",
+    "logging"
+  ],
+  "author": "Forrest L Norvell <ogd@aoaioxxysz.net>",
+  "license": "BSD"
+}
