@@ -22,5 +22,8 @@
     "logging"
   ],
   "author": "Forrest L Norvell <ogd@aoaioxxysz.net>",
-  "license": "BSD"
+  "license": "BSD",
+  "devDependencies": {
+    "tap": "~0.4.2"
+  }
 }
