@@ -12,7 +12,7 @@ stacks ([CrabDude/trycatch](https://github.com/CrabDude/trycatch) and
 others), but none of these modules are a good fit for developers writing
 tooling meant to be dropped transparently into user code.
 
-See also joyent/node#3733.
+See also [joyent/node#3733](https://github.com/joyent/issues/3733).
 
 Here is a sketch at what the user-visible API might look like. My
 original attempt at this used a slightly modified version of the domains
