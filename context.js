@@ -37,8 +37,28 @@ function Namespace (name) {
 // "class" method
 Namespace.get = function (name) { return namespaces[name]; };
 
-Namespace.prototype.createContext = function (name) {
+Namespace.prototype.createContext = function () {
   return new Context(this);
+};
+
+Namespace.prototype.set = function (name, value) {
+  if (!this.active) {
+    return;
+    // alternately: this.emit('error', "No active context on namespace " + this.name + " to set " + name "."); return;
+    // alternately: throw new Error("No active context on namespace " + this.name + " to set " + name ".");
+  }
+
+ this.active.set(name, value);
+};
+
+Namespace.prototype.get = function (name) {
+  if (!this.active) {
+    return;
+    // alternately: this.emit('error', "No active context on namespace " + this.name + " to get " + name "."); return;
+    // alternately: throw new Error("No active context on namespace " + this.name + " to get " + name ".");
+  }
+
+  return this.active.get(name);
 };
 
 module.exports = {

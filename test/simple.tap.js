@@ -26,13 +26,9 @@ Trace.prototype.runHandler = function (callback) {
   trace.run(callback);
 };
 
-function annotateTrace(name, value) {
-  var active = tracer.active;
-  active.set(name, value);
-}
 
 test("simple tracer built on contexts", function (t) {
-  t.plan(3);
+  t.plan(6);
 
   var harvester = new EventEmitter();
   var trace = new Trace(harvester);
@@ -44,6 +40,9 @@ test("simple tracer built on contexts", function (t) {
   });
 
   trace.runHandler(function inScope() {
-    annotateTrace('transaction', {status : 'ok'});
+    t.ok(tracer.active, "tracer should have an active context");
+    tracer.set('transaction', {status : 'ok'});
+    t.ok(tracer.get('transaction'), "can retrieve newly-set value");
+    t.equal(tracer.get('transaction').status, 'ok', "value should be correct");
   });
 });
