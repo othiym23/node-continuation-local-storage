@@ -34,11 +34,14 @@ function Namespace (name) {
   namespaces[name] = this;
 }
 
-Namespace.prototype.createContext = function () {
+// "class" method
+Namespace.get = function (name) { return namespaces[name]; };
+
+Namespace.prototype.createContext = function (name) {
   return new Context(this);
 };
 
 module.exports = {
   createNamespace : function (name) { return new Namespace(name); },
-  getNamespace : function (name) { return namespaces[name]; }
+  getNamespace : function (name) { return Namespace.get(name); }
 };
