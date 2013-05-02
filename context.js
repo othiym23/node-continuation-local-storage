@@ -14,13 +14,14 @@ function Context(namespace) {
 }
 util.inherits(Context, EventEmitter);
 
-Context.prototype.enter = function () { this.namespace.active = this; };
-Context.prototype.exit = function () { delete this.namespace.active; };
+Context.prototype.enter = function () { this.namespace._enter(this); };
+Context.prototype.exit = function () { return this.namespace._exit(this); };
 // TODO: Context.prototype.bind = function () {};
 // TODO: Context.prototype.add = function () {};
 Context.prototype.end = function () { this.emit('end'); };
 Context.prototype.set = function (key, value) { this.bag[key] = value; };
 Context.prototype.get = function (key) { return this.bag[key]; };
+Context.prototype.hasKey = function (key) { return key in this.bag; };
 Context.prototype.run = function (callback) {
   this.enter();
   callback.call(this);
@@ -30,35 +31,45 @@ Context.prototype.run = function (callback) {
 
 function Namespace (name) {
   assert.ok(name, "Namespace must be given a name!");
-  this.name = name;
   namespaces[name] = this;
+
+  this.name = name;
+  this.nest = [];
+  // every namespace has a default / "global" context
+  this.nest.push(this.createContext());
+  Object.defineProperty(this, "active", {
+    enumerable   : true,
+    configurable : false,
+    get          : function () { return this.nest[this.nest.length - 1]; }
+  });
 }
 
 // "class" method
 Namespace.get = function (name) { return namespaces[name]; };
 
-Namespace.prototype.createContext = function () {
-  return new Context(this);
+Namespace.prototype.createContext = function () { return new Context(this); };
+Namespace.prototype.set = function (key, value) { this.active.set(key, value); };
+
+// fall through to enclosing context if value isn't found in this context
+Namespace.prototype.get = function (key) {
+  for (var i = this.nest.length; i > 0; i--) {
+    if (this.nest[i - 1].hasKey(key)) return this.nest[i - 1].get(key);
+  }
 };
 
-Namespace.prototype.set = function (name, value) {
-  if (!this.active) {
-    return;
-    // alternately: this.emit('error', "No active context on namespace " + this.name + " to set " + name "."); return;
-    // alternately: throw new Error("No active context on namespace " + this.name + " to set " + name ".");
-  }
-
- this.active.set(name, value);
+Namespace.prototype._enter = function (context) {
+  assert.ok(context, "context must be provided for entering");
+  this.nest.push(context);
 };
 
-Namespace.prototype.get = function (name) {
-  if (!this.active) {
-    return;
-    // alternately: this.emit('error', "No active context on namespace " + this.name + " to get " + name "."); return;
-    // alternately: throw new Error("No active context on namespace " + this.name + " to get " + name ".");
+// TODO: generalize nesting via configuration to handle domains
+Namespace.prototype._exit = function (context) {
+  assert.ok(context, "context must be provided for exiting");
+  if (this.active === context &&
+      // don't delete the default context
+      context !== this.nest[0]) {
+    return this.nest.pop();
   }
-
-  return this.active.get(name);
 };
 
 module.exports = {
