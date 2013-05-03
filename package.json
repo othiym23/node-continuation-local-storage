@@ -1,6 +1,6 @@
 {
   "name": "local-context",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "userland implementation of https://github.com/joyent/node/issues/5243",
   "main": "context.js",
   "directories": {
