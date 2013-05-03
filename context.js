@@ -16,17 +16,23 @@ util.inherits(Context, EventEmitter);
 
 Context.prototype.enter = function () { this.namespace._enter(this); };
 Context.prototype.exit = function () { return this.namespace._exit(this); };
-// TODO: Context.prototype.bind = function () {};
 // TODO: Context.prototype.add = function () {};
 Context.prototype.end = function () { this.emit('end'); };
 Context.prototype.set = function (key, value) { this.bag[key] = value; };
 Context.prototype.get = function (key) { return this.bag[key]; };
 Context.prototype.hasKey = function (key) { return key in this.bag; };
+
+Context.prototype.bind = function (callback) {
+  return function bound() {
+    this.enter();
+    callback.apply(this, arguments);
+    this.exit();
+    this.end();
+  }.bind(this);
+};
+
 Context.prototype.run = function (callback) {
-  this.enter();
-  callback.call(this);
-  this.exit();
-  this.end();
+  return this.bind(callback)();
 };
 
 function Namespace (name) {
@@ -34,9 +40,19 @@ function Namespace (name) {
   namespaces[name] = this;
 
   this.name = name;
+
+  // TODO: by default, contexts nest -- but domains won't
   this.nest = [];
+
   // every namespace has a default / "global" context
   this.nest.push(this.createContext());
+
+  /* Even though contexts nest, preserve the ability to only interact with the
+   * active context.
+   *
+   * FIXME: domains require different behavior to preserve distinction between
+   * _makeCallback and _makeDomainCallback, for performance reasons.
+   */
   Object.defineProperty(this, "active", {
     enumerable   : true,
     configurable : false,
