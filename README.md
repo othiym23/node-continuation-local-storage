@@ -60,9 +60,9 @@ Look up an existing namespace.
 
 ## process.namespaces
 
-* return: array of {Namespace} objects
+* return: dictionary of {Namespace} objects
 
-List of available namespaces.
+Set of available namespaces.
 
 ## Class: Namespace
 
