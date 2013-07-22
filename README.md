@@ -1,10 +1,11 @@
-# Local Context
+# Continuation-Local Storage
 
     Stability: 1 - Experimental
 
-Local contexts provide a mechanism similar to thread-local storage in
-threaded programming. Contexts are created on namespaces and can be
-be nested.
+Continuation-local storage provides a mechanism similar to thread-local storage
+in threaded programming, with closures wrapped around portions of a
+continuation chain taking the place of mutable cells bound to thread data
+structures. Contexts are created on namespaces and can be be nested.
 
 Every namespace is created with a default context. The currently active
 context on a namespace is available via `namespace.active`.
@@ -47,7 +48,9 @@ function requestHandler() {
 
 * return: {Namespace}
 
-Returns a new namespace for context-sensitive values.
+Each application that wants to use continuation-local attributes should create
+its own namespace. Reading from (or, more significantly, writing to) namespaces
+that don't belong to you should be considered a faux pas.
 
 ## context.getNamespace(name)
 
@@ -63,9 +66,11 @@ List of available namespaces.
 
 ## Class: Namespace
 
-The Namespace groups local contexts, and encapsulates their nesting
-behavior, as well as containing the associated keys and values set on
-that namespace.
+Application-specific namespaces provide access to continuation-local
+attributes, and may have specialized behavior on a per-namespace basis (custom
+nesting behavior). Once the execution of a handler chain begins, creating new
+contexts and changing local values should be considered mutating the value of a
+given attribute on that particular continuation chain.
 
 ### namespace.active
 
@@ -73,43 +78,43 @@ Returns the currently active context on a namespace.
 
 ### namespace.createContext()
 
-Create a new local context.
+Create a new scope to which attributes can be bound or mutated.
 
 ### namespace.set(key, value)
 
-Set a value on the current local context. Shorthand for
+Set a value on the current continuation context. Shorthand for
 `namespace.active.set(key, value)`.
 
 ### namespace.get(key)
 
-Look up a value on the current local context. Recursively searches from
-the innermost to outermost nested local context for a value associated
+Look up a value on the current continuation context. Recursively searches from
+the innermost to outermost nested continuation context for a value associated
 with a given key.
 
 ## Class: Context
 
-A Context encapsulates the current nesting level and its associated
-values. Contexts are derived from [EventEmitter][], and have a life
-cycle (which, for now, consists of the `end` event when they're about to
-go out of scope). Contexts are created exclusively via Namespaces.
+A Context encapsulates the current point in time in the execution of a callback
+chain and its associated values. Contexts are derived from [EventEmitter][],
+and have a life cycle (which, for now, consists of the `end` event when they're
+about to go out of scope). Contexts are created exclusively via Namespaces.
 
 ### context.run(callback)
 
-Run a function within the specified local context. Shortcut for
+Run a function within the specified continuation context. Shortcut for
 `context.bind(callback)()`.
 
 ### context.bind(callback)
 
-Bind a function to the specified local context. Works analagously to
+Bind a function to the specified continuation context. Works analagously to
 `Function.bind()` or `domain.bind()`.
 
 ### context.set(key, value)
 
-Set a value on the specified local context.
+Set a value on the specified continuation context.
 
 ### context.get(key)
 
-Look up a value on *only* the specified local context -- doesn't fall
+Look up a value on *only* the specified continuation context -- doesn't fall
 through to containing scopes.
 
 ## Rationale
