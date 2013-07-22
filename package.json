@@ -1,5 +1,5 @@
 {
-  "name": "local-context",
+  "name": "continuation-local-storage",
   "version": "0.1.1",
   "description": "userland implementation of https://github.com/joyent/node/issues/5243",
   "main": "context.js",
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/othiym23/node-local-context.git"
+    "url": "https://github.com/othiym23/node-continuation-local-storage.git"
   },
   "keywords": [
     "threading",
