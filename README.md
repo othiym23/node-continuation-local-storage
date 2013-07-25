@@ -17,23 +17,19 @@ var writer = cls.createNamespace('writer');
 writer.set('value', 0);
 
 function requestHandler() {
-  var outer = writer.run(function () {
+  writer.run(function () {
     // writer.get('value') returns 0
     writer.set('value', 1);
-    // outer.get('value') returns 1
     // writer.get('value') returns 1
-
     process.nextTick(function () {
-      // writer.get('value') returns 0
-      var inner = writer.run(function () {
+      // writer.get('value') returns 1
+      writer.run(function () {
         // writer.get('value') returns 1
         writer.set('value', 2);
-        // outer.get('value') returns 1
-        // inner.get('value') returns 2
         // writer.get('value') returns 2
       });
     });
-  })
+  });
 
   setTimeout(function () {
     // runs with the default context, because nested contexts have ended
