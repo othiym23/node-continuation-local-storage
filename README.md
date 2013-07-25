@@ -11,31 +11,32 @@ Every namespace is created with a default context. The currently active
 context on a namespace is available via `namespace.active`.
 
 ```javascript
-var context = require('context');
+var cls = require('contination-local-storage');
 
-var writer = context.createNamespace('writer');
+var writer = cls.createNamespace('writer');
 writer.set('value', 0);
 
 function requestHandler() {
-  var outer = writer.createContext();
-  outer.run(function () {
+  writer.run(function (outer) {
     // writer.get('value') returns 0
+    // outer.value is 0
     writer.set('value', 1);
-    // outer.get('value') returns 1
     // writer.get('value') returns 1
-
-    var inner = writer.createContext();
+    // outer.value is 1
     process.nextTick(function () {
-      // writer.get('value') returns 0
-      inner.run(function () {
+      // writer.get('value') returns 1
+      // outer.value is 1
+      writer.run(function (inner) {
         // writer.get('value') returns 1
+        // outer.value is 1
+        // inner.value is 1
         writer.set('value', 2);
-        // outer.get('value') returns 1
-        // inner.get('value') returns 2
         // writer.get('value') returns 2
+        // outer.value is 1
+        // inner.value is 2
       });
     });
-  })
+  });
 
   setTimeout(function () {
     // runs with the default context, because nested contexts have ended
@@ -44,7 +45,7 @@ function requestHandler() {
 }
 ```
 
-## context.createNamespace(name)
+## cls.createNamespace(name)
 
 * return: {Namespace}
 
@@ -52,7 +53,7 @@ Each application that wants to use continuation-local attributes should create
 its own namespace. Reading from (or, more significantly, writing to) namespaces
 that don't belong to you should be considered a faux pas.
 
-## context.getNamespace(name)
+## cls.getNamespace(name)
 
 * return: {Namespace}
 
@@ -76,14 +77,12 @@ given attribute on that particular continuation chain.
 
 Returns the currently active context on a namespace.
 
-### namespace.createContext()
-
-Create a new scope to which attributes can be bound or mutated.
-
 ### namespace.set(key, value)
 
 Set a value on the current continuation context. Shorthand for
 `namespace.active.set(key, value)`.
+
+Returns the value.
 
 ### namespace.get(key)
 
@@ -91,31 +90,22 @@ Look up a value on the current continuation context. Recursively searches from
 the innermost to outermost nested continuation context for a value associated
 with a given key.
 
-## Class: Context
+### namespace.run(continuation)
 
-A Context encapsulates the current point in time in the execution of a callback
-chain and its associated values. Contexts are derived from [EventEmitter][],
-and have a life cycle (which, for now, consists of the `end` event when they're
-about to go out of scope). Contexts are created exclusively via Namespaces.
+Create a new scope to which attributes can be bound or mutated.  Run the
+continuation in this new scope (passing in the new context into the
+continuation).  It also returns the context that just exited in case you want
+to read data from it.
 
-### context.run(callback)
-
-Run a function within the specified continuation context. Shortcut for
-`context.bind(callback)()`.
-
-### context.bind(callback)
+### namespace.bind(callback, [context])
 
 Bind a function to the specified continuation context. Works analagously to
-`Function.bind()` or `domain.bind()`.
+`Function.bind()` or `domain.bind()`.  If context is omitted, it will default to
+the currently active context in the namespace.
 
-### context.set(key, value)
+## context
 
-Set a value on the specified continuation context.
-
-### context.get(key)
-
-Look up a value on *only* the specified continuation context -- doesn't fall
-through to containing scopes.
+A context is just a plain object that inherits from it's parent context.
 
 ## Rationale
 
@@ -148,28 +138,21 @@ namespaces), although that isn't included here.
 Here's an example of how the API might be used:
 
 ```javascript
-var context = require('context');
+var cls = require('continuation-local-storage');
 
 // multiple contexts in use
-var tracer = context.createNamespace('tracer');
+var tracer = cls.createNamespace('tracer');
 
 function Trace(harvester) {
   this.harvester = harvester;
 }
 
 Trace.prototype.runHandler = function (callback) {
-  var trace = tracer.createContext();
-
-  trace.on('end', function () {
-    var transaction = trace.get('transaction');
-    this.harvester.emit('finished', transaction);
-  };
-
-  trace.run(callback);
+  var trace = tracer.run(callback);
+  this.harvester.emit('finished', trace.transaction);
 };
 
 Trace.prototype.annotateState = function (name, value) {
-  var active = tracer.active;
-  active.set(name, value);
+  tracer.set(name, value);
 };
 ```

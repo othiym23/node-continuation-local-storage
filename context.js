@@ -1,39 +1,8 @@
 'use strict';
 
-var util = require('util');
 var assert = require('assert');
-var EventEmitter = require('events').EventEmitter;
 
 var namespaces = process.namespaces = Object.create(null);
-
-function Context(namespace) {
-  assert.ok(namespace, "Context must be associated with namespace!");
-  EventEmitter.call(this);
-  this.namespace = namespace;
-  this.bag = Object.create(null);
-}
-util.inherits(Context, EventEmitter);
-
-Context.prototype.enter = function () { this.namespace._enter(this); };
-Context.prototype.exit = function () { return this.namespace._exit(this); };
-// TODO: Context.prototype.add = function () {};
-Context.prototype.end = function () { this.emit('end'); };
-Context.prototype.set = function (key, value) { this.bag[key] = value; };
-Context.prototype.get = function (key) { return this.bag[key]; };
-Context.prototype.hasKey = function (key) { return key in this.bag; };
-
-Context.prototype.bind = function (callback) {
-  return function bound() {
-    this.enter();
-    callback.apply(this, arguments);
-    this.exit();
-    this.end();
-  }.bind(this);
-};
-
-Context.prototype.run = function (callback) {
-  return this.bind(callback)();
-};
 
 function Namespace (name) {
   assert.ok(name, "Namespace must be given a name!");
@@ -42,53 +11,72 @@ function Namespace (name) {
   this.name = name;
 
   // TODO: by default, contexts nest -- but domains won't
-  this.nest = [];
+  this._stack = [];
 
   // every namespace has a default / "global" context
-  this.nest.push(this.createContext());
-
-  /* Even though contexts nest, preserve the ability to only interact with the
-   * active context.
-   *
-   * FIXME: domains require different behavior to preserve distinction between
-   * _makeCallback and _makeDomainCallback, for performance reasons.
-   */
-  Object.defineProperty(this, "active", {
-    enumerable   : true,
-    configurable : false,
-    get          : function () { return this.nest[this.nest.length - 1]; }
-  });
+  // FIXME: domains require different behavior to preserve distinction between
+  // _makeCallback and _makeDomainCallback, for performance reasons.
+  this.active = Object.create(null);
 }
 
 // "class" method
-Namespace.get = function (name) { return namespaces[name]; };
+Namespace.get = getNamespace;
 
-Namespace.prototype.createContext = function () { return new Context(this); };
-Namespace.prototype.set = function (key, value) { this.active.set(key, value); };
+function getNamespace(name) { return namespaces[name]; }
 
-// fall through to enclosing context if value isn't found in this context
-Namespace.prototype.get = function (key) {
-  for (var i = this.nest.length; i > 0; i--) {
-    if (this.nest[i - 1].hasKey(key)) return this.nest[i - 1].get(key);
-  }
+Namespace.prototype.set = function (key, value) {
+  return this.active[key] = value;
 };
 
-Namespace.prototype._enter = function (context) {
+Namespace.prototype.get = function (key) {
+  return this.active[key];
+};
+
+Namespace.prototype.run = function (fn) {
+  var context = Object.create(this.active);
+  this.enter(context);
+  fn(context);
+  this.exit(context);
+  return context;
+};
+
+Namespace.prototype.bind = function (fn, context) {
+  if (!context) context = this.active;
+  var self = this;
+  return function () {
+    self.enter(context);
+    var result = fn.apply(this, arguments);
+    self.exit(context);
+    return result;
+  };
+};
+
+Namespace.prototype.enter = function (context) {
   assert.ok(context, "context must be provided for entering");
-  this.nest.push(context);
+  this._stack.push(this.active);
+  this.active = context;
 };
 
 // TODO: generalize nesting via configuration to handle domains
-Namespace.prototype._exit = function (context) {
+Namespace.prototype.exit = function (context) {
   assert.ok(context, "context must be provided for exiting");
-  if (this.active === context &&
-      // don't delete the default context
-      context !== this.nest[0]) {
-    return this.nest.pop();
+
+  // Fast path for most exits that are at the top of the stack
+  if (this.active === context) {
+    assert.ok(this._stack.length, "can't remove top context");
+    this.active = this._stack.pop();
+    return;
   }
+
+  // Fast search in the stack using lastIndexOf
+  var index = this._stack.lastIndexOf(context);
+  assert.ok(index >= 0, "context not found in namespace");
+  assert.ok(index, "can't remove top context");
+  this.active = this._stack[index - 1];
+  this._stack.length = index - 1;
 };
 
 module.exports = {
   createNamespace : function (name) { return new Namespace(name); },
-  getNamespace : function (name) { return Namespace.get(name); }
+  getNamespace : getNamespace
 };
