@@ -19,13 +19,14 @@ function Namespace (name) {
   this.active = Object.create(null);
 }
 
+function getNamespace(name) { return namespaces[name]; }
+
 // "class" method
 Namespace.get = getNamespace;
 
-function getNamespace(name) { return namespaces[name]; }
-
 Namespace.prototype.set = function (key, value) {
-  return this.active[key] = value;
+  this.active[key] = value;
+  return value;
 };
 
 Namespace.prototype.get = function (key) {
