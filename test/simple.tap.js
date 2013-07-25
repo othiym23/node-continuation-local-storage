@@ -15,15 +15,9 @@ function Trace(harvester) {
   this.harvester = harvester;
 }
 
-Trace.prototype.runHandler = function (callback) {
-  var trace = tracer.createContext();
-
-  trace.on('end', function () {
-    var transaction = trace.get('transaction');
-    this.harvester.emit('finished', transaction);
-  }.bind(this));
-
-  trace.run(callback);
+Trace.prototype.runHandler = function (handler) {
+  var trace = tracer.run(handler);
+  this.harvester.emit('finished', trace.transaction);
 };
 
 
