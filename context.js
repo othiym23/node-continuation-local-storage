@@ -32,11 +32,10 @@ Namespace.prototype.get = function (key) {
   return this.active[key];
 };
 
-Namespace.prototype.run = function (fn, onEnd) {
+Namespace.prototype.run = function (fn) {
   var context = Object.create(this.active);
   this.enter(context);
-  fn();
-  if (onEnd) onEnd();
+  fn(context);
   this.exit(context);
   return context;
 };

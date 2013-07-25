@@ -17,16 +17,23 @@ var writer = cls.createNamespace('writer');
 writer.set('value', 0);
 
 function requestHandler() {
-  writer.run(function () {
+  writer.run(function (outer) {
     // writer.get('value') returns 0
+    // outer.value is 0
     writer.set('value', 1);
     // writer.get('value') returns 1
+    // outer.value is 1
     process.nextTick(function () {
       // writer.get('value') returns 1
-      writer.run(function () {
+      // outer.value is 1
+      writer.run(function (inner) {
         // writer.get('value') returns 1
+        // outer.value is 1
+        // inner.value is 1
         writer.set('value', 2);
         // writer.get('value') returns 2
+        // outer.value is 1
+        // inner.value is 2
       });
     });
   });
@@ -83,13 +90,12 @@ Look up a value on the current continuation context. Recursively searches from
 the innermost to outermost nested continuation context for a value associated
 with a given key.
 
-### namespace.run(continuation, [onEnd])
-
-* return: newly created context.
+### namespace.run(continuation)
 
 Create a new scope to which attributes can be bound or mutated.  Run the
-continuation in this new scope.  Optionally be notified when the continuation is
-done.
+continuation in this new scope (passing in the new context into the
+continuation).  It also returns the context that just exited in case you want
+to read data from it.
 
 ### namespace.bind(callback, [context])
 
@@ -138,11 +144,8 @@ function Trace(harvester) {
 }
 
 Trace.prototype.runHandler = function (callback) {
-  var harvester = this.harvester;
-  tracer.run(callback, function () {
-    var transaction = tracer.get('transaction');
-    harvester.emit('finished', transaction);
-  });
+  var trace = tracer.run(callback);
+  this.harvester.emit('finished', trace.transaction);
 };
 
 Trace.prototype.annotateState = function (name, value) {
