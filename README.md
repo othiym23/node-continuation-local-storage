@@ -103,6 +103,10 @@ Bind a function to the specified continuation context. Works analagously to
 `Function.bind()` or `domain.bind()`.  If context is omitted, it will default to
 the currently active context in the namespace.
 
+## context
+
+A context is just a plain object that inherits from it's parent context.
+
 ## Rationale
 
 The domains mechanism is a useful tool for adding context to errors
