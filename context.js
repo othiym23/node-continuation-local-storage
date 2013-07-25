@@ -32,6 +32,26 @@ Namespace.prototype.get = function (key) {
   return this.active[key];
 };
 
+Namespace.prototype.run = function (fn, onEnd) {
+  var context = Object.create(this.active);
+  this.enter(context);
+  fn();
+  if (onEnd) onEnd();
+  this.exit(context);
+  return context;
+};
+
+Namespace.prototype.bind = function (fn, context) {
+  if (!context) context = this.active;
+  var self = this;
+  return function () {
+    self.enter(context);
+    var result = fn.apply(this, arguments);
+    self.exit(context);
+    return result;
+  };
+};
+
 Namespace.prototype.enter = function (context) {
   assert.ok(context, "context must be provided for entering");
   this._stack.push(this.active);
