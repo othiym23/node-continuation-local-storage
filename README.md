@@ -79,6 +79,8 @@ Returns the currently active context on a namespace.
 Set a value on the current continuation context. Shorthand for
 `namespace.active.set(key, value)`.
 
+Returns the value.
+
 ### namespace.get(key)
 
 Look up a value on the current continuation context. Recursively searches from
@@ -86,6 +88,8 @@ the innermost to outermost nested continuation context for a value associated
 with a given key.
 
 ### namespace.run(continuation, [onEnd])
+
+* return: newly created context.
 
 Create a new scope to which attributes can be bound or mutated.  Run the
 continuation in this new scope.  Optionally be notified when the continuation is
