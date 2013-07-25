@@ -142,10 +142,10 @@ function Trace(harvester) {
 }
 
 Trace.prototype.runHandler = function (callback) {
-  var self = this;
+  var harvester = this.harvester;
   tracer.run(callback, function () {
     var transaction = tracer.get('transaction');
-    self.harvester.emit('finished', transaction);
+    harvester.emit('finished', transaction);
   });
 };
 
