@@ -71,7 +71,7 @@ Namespace.prototype.exit = function (context) {
 
   // Fast search in the stack using lastIndexOf
   var index = this._stack.lastIndexOf(context);
-  assert.ok(index >= 0, "context not found in namespace");
+  assert.ok(index >= 0, "context not currently entered; can't exit");
   assert.ok(index, "can't remove top context");
   this.active = this._stack[index - 1];
   this._stack.length = index - 1;
