@@ -33,8 +33,13 @@ Namespace.prototype.get = function (key) {
   return this.active[key];
 };
 
-Namespace.prototype.run = function (fn) {
+Namespace.prototype.createContext = function () {
   var context = Object.create(this.active);
+  return context;
+};
+
+Namespace.prototype.run = function (fn) {
+  var context = this.createContext();
   this.enter(context);
   fn(context);
   this.exit(context);
