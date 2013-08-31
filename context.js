@@ -13,6 +13,18 @@ function Namespace (name) {
   // TODO: by default, contexts nest -- but domains won't
   this._stack = [];
 
+  var self = this;
+  process.addAsyncListener(function () {
+    return self.active;
+  }, {
+    before: function (context) {
+      self.enter(context);
+    },
+    after: function (context) {
+      self.exit(context);
+    }
+  });
+
   // every namespace has a default / "global" context
   // FIXME: domains require different behavior to preserve distinction between
   // _makeCallback and _makeDomainCallback, for performance reasons.
@@ -40,9 +52,14 @@ Namespace.prototype.createContext = function () {
 
 Namespace.prototype.run = function (fn) {
   var context = this.createContext();
+
   this.enter(context);
-  fn(context);
-  this.exit(context);
+  try {
+    fn(context);
+  }
+  finally {
+    this.exit(context);
+  }
   return context;
 };
 
