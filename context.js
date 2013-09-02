@@ -15,6 +15,18 @@ function Namespace (name) {
 
   this._stack = [];
 
+  var self = this;
+  process.addAsyncListener(function () {
+    return self.active;
+  }, {
+    before: function (context) {
+      self.enter(context);
+    },
+    after: function (context) {
+      self.exit(context);
+    }
+  });
+
   // every namespace has a default / "global" context
   this.active = Object.create(null);
 }
@@ -40,6 +52,7 @@ Namespace.prototype.createContext = function () {
 
 Namespace.prototype.run = function (fn) {
   var context = this.createContext();
+
   this.enter(context);
   try {
     fn(context);
