@@ -10,12 +10,9 @@ function Namespace (name) {
 
   this.name = name;
 
-  // TODO: by default, contexts nest -- but domains won't
   this._stack = [];
 
   // every namespace has a default / "global" context
-  // FIXME: domains require different behavior to preserve distinction between
-  // _makeCallback and _makeDomainCallback, for performance reasons.
   this.active = Object.create(null);
 }
 
@@ -41,8 +38,12 @@ Namespace.prototype.createContext = function () {
 Namespace.prototype.run = function (fn) {
   var context = this.createContext();
   this.enter(context);
-  fn(context);
-  this.exit(context);
+  try {
+    fn(context);
+  }
+  finally {
+    this.exit(context);
+  }
   return context;
 };
 
