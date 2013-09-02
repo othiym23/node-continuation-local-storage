@@ -2,6 +2,9 @@
 
 var assert = require('assert');
 
+// load polyfill if native support is unavailable
+if (!process.addAsyncListener) require('async-listener');
+
 var namespaces = process.namespaces = Object.create(null);
 
 function Namespace (name) {
@@ -84,6 +87,22 @@ Namespace.prototype.exit = function (context) {
 };
 
 module.exports = {
-  createNamespace : function (name) { return new Namespace(name); },
+  createNamespace : function (name) {
+    var namespace = new Namespace(name);
+    process.addAsyncListener(
+      function () {
+        return namespace.active;
+      },
+      {
+        before: function (context) {
+          namespace.enter(context);
+        },
+        after: function (context) {
+          namespace.exit(context);
+        }
+      }
+    );
+    return namespace;
+  },
   getNamespace : getNamespace
 };

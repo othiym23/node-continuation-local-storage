@@ -6,7 +6,7 @@ var test = tap.test;
 var EventEmitter = require('events').EventEmitter;
 
 // module under test
-var context = require('../context');
+var context = require('../context.js');
 
 // multiple contexts in use
 var tracer = context.createNamespace('tracer');

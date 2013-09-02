@@ -29,5 +29,8 @@
   "license": "BSD",
   "devDependencies": {
     "tap": "~0.4.2"
+  },
+  "optionalDependencies": {
+    "async-listener": "0.0.2"
   }
 }

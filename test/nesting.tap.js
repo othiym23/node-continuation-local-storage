@@ -48,10 +48,8 @@ test("the example from the docs", function (t) {
       t.equal(outer.value, 1, "outer is active");
 
       process.nextTick(function () {
-        // FIXME: once this is in core, 'value' should be 1 because
-        // outer is still active
-        // FIXME: t.equal(writer.active, outer, "writer.active == outer");
-        t.equal(writer.get('value'), 0, "inner hasn't been entered yet");
+        t.equal(writer.active, outer, "writer.active == outer");
+        t.equal(writer.get('value'), 1, "inner has been entered");
         writer.run(function (inner) {
           t.equal(writer.active, inner, "writer.active == inner");
 
