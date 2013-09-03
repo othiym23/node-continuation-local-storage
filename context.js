@@ -19,6 +19,10 @@ function Namespace (name) {
   this.active = Object.create(null);
 }
 
+function resetNamespaces() { 
+  namespaces = Object.create(null); 
+};
+
 function getNamespace(name) { return namespaces[name]; }
 
 // "class" method
@@ -104,5 +108,6 @@ module.exports = {
     );
     return namespace;
   },
-  getNamespace : getNamespace
+  getNamespace : getNamespace,
+  resetNamespaces: resetNamespaces
 };
