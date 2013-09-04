@@ -5,24 +5,14 @@ var assert = require('assert');
 // load polyfill if native support is unavailable
 if (!process.addAsyncListener) require('async-listener');
 
-var namespaces = process.namespaces = Object.create(null);
+var namespaces;
 
-function Namespace (name) {
-  assert.ok(name, "Namespace must be given a name!");
-  namespaces[name] = this;
-
-  this.name = name;
-
-  this._stack = [];
-
+function Namespace () {
   // every namespace has a default / "global" context
   this.active = Object.create(null);
+  this._stack = [];
+  this.id     = null;
 }
-
-function getNamespace(name) { return namespaces[name]; }
-
-// "class" method
-Namespace.get = getNamespace;
 
 Namespace.prototype.set = function (key, value) {
   this.active[key] = value;
@@ -55,9 +45,14 @@ Namespace.prototype.bind = function (fn, context) {
   var self = this;
   return function () {
     self.enter(context);
-    var result = fn.apply(this, arguments);
-    self.exit(context);
-    return result;
+    var result;
+    try {
+      result = fn.apply(this, arguments);
+    }
+    finally {
+      self.exit(context);
+      return result;
+    }
   };
 };
 
@@ -67,7 +62,6 @@ Namespace.prototype.enter = function (context) {
   this.active = context;
 };
 
-// TODO: generalize nesting via configuration to handle domains
 Namespace.prototype.exit = function (context) {
   assert.ok(context, "context must be provided for exiting");
 
@@ -80,29 +74,58 @@ Namespace.prototype.exit = function (context) {
 
   // Fast search in the stack using lastIndexOf
   var index = this._stack.lastIndexOf(context);
+
   assert.ok(index >= 0, "context not currently entered; can't exit");
   assert.ok(index, "can't remove top context");
+
   this.active = this._stack[index - 1];
   this._stack.length = index - 1;
 };
 
+function get(name) {
+  return namespaces[name];
+}
+
+function create(name) {
+  assert.ok(name, "namespace must be given a name!");
+
+  var namespace = new Namespace(name);
+  namespace.id = process.addAsyncListener(
+    function () {
+      return namespace.active;
+    },
+    {
+      before : function (context) { namespace.enter(context); },
+      after  : function (context) { namespace.exit(context); }
+    }
+  );
+
+  namespaces[name] = namespace;
+  return namespace;
+}
+
+function destroy(name) {
+  var namespace = get(name);
+  assert.ok(namespace,    "can't delete nonexistent namespace!");
+  assert.ok(namespace.id, "don't assign to process.namespaces directly!");
+  process.removeAsyncListener(namespace.id);
+  namespaces[name] = null;
+}
+
+function reset() {
+  // must unregister async listeners
+  if (namespaces) {
+    Object.keys(namespaces).forEach(function (name) {
+      destroy(name);
+    });
+  }
+  namespaces = process.namespaces = Object.create(null);
+}
+reset(); // call immediately to set up
+
 module.exports = {
-  createNamespace : function (name) {
-    var namespace = new Namespace(name);
-    process.addAsyncListener(
-      function () {
-        return namespace.active;
-      },
-      {
-        before: function (context) {
-          namespace.enter(context);
-        },
-        after: function (context) {
-          namespace.exit(context);
-        }
-      }
-    );
-    return namespace;
-  },
-  getNamespace : getNamespace
+  getNamespace     : get,
+  createNamespace  : create,
+  destroyNamespace : destroy,
+  reset            : reset
 };
