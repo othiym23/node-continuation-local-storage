@@ -13,7 +13,7 @@ before calling a function passed in by a user to continue execution:
 ```javascript
 // setup.js
 
-var createNamespace = require('continuation_local_storage').createNamespace;
+var createNamespace = require('continuation-local-storage').createNamespace;
 var session = createNamespace('my session');
 
 var db = require('./lib/db.js');
@@ -72,7 +72,7 @@ overwriting the parent's.
 A simple, annotated example of how this nesting behaves:
 
 ```javascript
-var createNamespace = require('contination_local_storage').createNamespace;
+var createNamespace = require('contination-local-storage').createNamespace;
 
 var writer = createNamespace('writer');
 writer.set('value', 0);
