@@ -24,8 +24,7 @@ Namespace.prototype.get = function (key) {
 };
 
 Namespace.prototype.createContext = function () {
-  var context = Object.create(this.active);
-  return context;
+  return Object.create(this.active);
 };
 
 Namespace.prototype.run = function (fn) {
@@ -45,19 +44,18 @@ Namespace.prototype.bind = function (fn, context) {
   var self = this;
   return function () {
     self.enter(context);
-    var result;
     try {
-      result = fn.apply(this, arguments);
+      return fn.apply(this, arguments);
     }
     finally {
       self.exit(context);
-      return result;
     }
   };
 };
 
 Namespace.prototype.enter = function (context) {
   assert.ok(context, "context must be provided for entering");
+
   this._stack.push(this.active);
   this.active = context;
 };
@@ -76,7 +74,7 @@ Namespace.prototype.exit = function (context) {
   var index = this._stack.lastIndexOf(context);
 
   assert.ok(index >= 0, "context not currently entered; can't exit");
-  assert.ok(index, "can't remove top context");
+  assert.ok(index,      "can't remove top context");
 
   this.active = this._stack[index - 1];
   this._stack.length = index - 1;
@@ -106,8 +104,10 @@ function create(name) {
 
 function destroy(name) {
   var namespace = get(name);
+
   assert.ok(namespace,    "can't delete nonexistent namespace!");
   assert.ok(namespace.id, "don't assign to process.namespaces directly!");
+
   process.removeAsyncListener(namespace.id);
   namespaces[name] = null;
 }
