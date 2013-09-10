@@ -186,6 +186,28 @@ Bind a function to the specified namespace. Works analogously to
 `Function.bind()` or `domain.bind()`. If context is omitted, it will default to
 the currently active context in the namespace.
 
+### namespace.createContext()
+
+* return: a context cloned from the currently active context
+
+Use this with `namespace.bind()`, if you want to have a fresh context at invocation time,
+as opposed to binding time:
+
+```javascript
+function doSomething(p) {
+  console.log("%s = %s", p, ns.get(p));
+}
+
+function bindLater(callback) {
+  return writer.bind(callback, writer.createContext());
+}
+
+setInterval(function () {
+  var bound = bindLater(doSomething);
+  bound('test');
+}, 100);
+```
+
 ## context
 
 A context is a plain object created using the enclosing context as its prototype.
