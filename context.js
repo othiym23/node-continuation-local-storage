@@ -32,11 +32,11 @@ Namespace.prototype.run = function (fn) {
   this.enter(context);
   try {
     fn(context);
+    return context;
   }
   finally {
     this.exit(context);
   }
-  return context;
 };
 
 Namespace.prototype.bind = function (fn, context) {
@@ -93,8 +93,8 @@ function create(name) {
       return namespace.active;
     },
     {
-      before : function (context) { namespace.enter(context); },
-      after  : function (context) { namespace.exit(context); }
+      before : function (context, domain) { namespace.enter(domain); },
+      after  : function (context, domain) { namespace.exit(domain); }
     }
   );
 
