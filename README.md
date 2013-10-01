@@ -200,7 +200,7 @@ are doing other things with HTTP listeners:
 ```javascript
 http.createServer(function (req, res) {
   writer.add(req);
-  writer.add(rew);
+  writer.add(res);
 
   // do other stuff, some of which is asynchronous
 });
