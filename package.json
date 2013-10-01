@@ -31,6 +31,6 @@
     "tap": "~0.4.2"
   },
   "optionalDependencies": {
-    "async-listener": ">=0.1.1"
+    "async-listener": ">=0.1.2"
   }
 }
