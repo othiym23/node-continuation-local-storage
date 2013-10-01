@@ -32,5 +32,8 @@
   },
   "optionalDependencies": {
     "async-listener": ">=0.1.2"
+  },
+  "dependencies": {
+    "shimmer": "~0.7"
   }
 }

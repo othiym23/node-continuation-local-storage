@@ -1,6 +1,7 @@
 'use strict';
 
 var assert = require('assert');
+var wrap   = require('shimmer').wrap;
 
 // load polyfill if native support is unavailable
 if (!process.addAsyncListener) require('async-listener');
@@ -78,6 +79,66 @@ Namespace.prototype.exit = function (context) {
 
   this.active = this._stack[index - 1];
   this._stack.length = index - 1;
+};
+
+Namespace.prototype.bindEmitter = function (source) {
+  assert.ok(source.on && source.addListener && source.emit, "can only bind real EEs");
+
+  var namespace = this;
+  var contextName = '__' + this.name;
+
+  function capturer(on) {
+    return function (event, listener) {
+      listener[contextName] = namespace.active;
+
+      var returned = on.call(this, event, listener);
+
+      // FIXME: ReadableStreams overwrite on / addListener; find out why
+      wrap(this, 'on',          capturer);
+      wrap(this, 'addListener', capturer);
+
+      return returned;
+    };
+  }
+
+  function prepare(handlers) {
+    var replacements = [];
+    for (var i = 0; i < handlers.length; i++) {
+      var handler = handlers[i];
+      if (handler[contextName]) {
+        replacements.push(namespace.bind(handler, handler[contextName]));
+      }
+      else {
+        replacements.push(handler);
+      }
+    }
+
+    return replacements;
+  }
+
+  function puncher(emit) {
+    return function (event) {
+      if (!this._events[event]) return emit.apply(this, arguments);
+
+      // setup
+      var events = this._events[event];
+      if (typeof events === 'function' && events[contextName]) {
+        this._events[event] = namespace.bind(events, events[contextName]);
+      }
+      else if (events.length) {
+        this._events[event] = prepare(events);
+      }
+
+      // application
+      var returned = emit.apply(this, arguments);
+      this._events[event] = events;
+      return returned;
+    };
+  }
+
+  wrap(source, 'addListener', capturer);
+  wrap(source, 'on',          capturer);
+  wrap(source, 'emit',        puncher);
 };
 
 function get(name) {

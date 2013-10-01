@@ -186,6 +186,26 @@ Bind a function to the specified namespace. Works analogously to
 `Function.bind()` or `domain.bind()`. If context is omitted, it will default to
 the currently active context in the namespace.
 
+### namespace.bindEmitter(emitter)
+
+Bind an EventEmitter to a namespace. Operates similarly to `domain.add`, with a
+less generic name and the additional caveat that unlike domains, namespaces
+never implicitly bind EventEmitters to themselves when they're created within
+the context of an active namespace.
+
+The most likely time you'd want to use this is when you're using Express or
+Connect and want to make sure your middleware execution plays nice with CLS, or
+are doing other things with HTTP listeners:
+
+```javascript
+http.createServer(function (req, res) {
+  writer.add(req);
+  writer.add(rew);
+
+  // do other stuff, some of which is asynchronous
+});
+```
+
 ### namespace.createContext()
 
 * return: a context cloned from the currently active context
