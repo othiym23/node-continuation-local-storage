@@ -13,7 +13,7 @@ function fresh(name, context) {
 }
 
 test("event emitters bound to CLS context", function (t) {
-  t.plan(3);
+  t.plan(4);
 
   t.test("handler registered in context", function (t) {
     t.plan(1);
@@ -69,5 +69,37 @@ test("event emitters bound to CLS context", function (t) {
     });
 
     ee.emit('event');
+  });
+
+  t.test("handler added but no listeners registered", function (t) {
+    t.plan(3);
+
+    var http = require('http')
+      , n    = fresh('no_listener', this)
+      ;
+
+    // only fails on Node < 0.10
+    var server = http.createServer(function (req, res) {
+      n.bindEmitter(req);
+
+      t.doesNotThrow(function () {
+        req.emit('event');
+      });
+
+      res.writeHead(200, {"Content-Length" : 4});
+      res.end('WORD');
+    });
+    server.listen(8080);
+
+    http.get('http://localhost:8080/', function (res) {
+      t.equal(res.statusCode, 200, "request came back OK");
+
+      res.setEncoding('ascii');
+      res.on('data', function (body) {
+        t.equal(body, 'WORD');
+
+        server.close();
+      });
+    });
   });
 });

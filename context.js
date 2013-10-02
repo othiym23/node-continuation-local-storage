@@ -118,7 +118,7 @@ Namespace.prototype.bindEmitter = function (source) {
 
   function puncher(emit) {
     return function (event) {
-      if (!this._events[event]) return emit.apply(this, arguments);
+      if (!this._events || !this._events[event]) return emit.apply(this, arguments);
 
       // setup
       var events = this._events[event];
