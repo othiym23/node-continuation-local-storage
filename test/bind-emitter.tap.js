@@ -13,7 +13,7 @@ function fresh(name, context) {
 }
 
 test("event emitters bound to CLS context", function (t) {
-  t.plan(8);
+  t.plan(9);
 
   t.test("handler registered in context", function (t) {
     t.plan(1);
@@ -132,6 +132,43 @@ test("event emitters bound to CLS context", function (t) {
       t.comment("this test requires node 0.10+");
       t.end();
     }
+  });
+
+  t.test("emitter with newListener that removes handler", function (t) {
+    t.plan(3);
+
+    var n  = fresh('newListener', this)
+      , ee = new EventEmitter()
+      ;
+
+    // add monkeypatching to ee
+    n.bindEmitter(ee);
+
+    function listen() {
+      ee.on('data', function (chunk) {
+        t.equal(chunk, 'chunk', 'listener still works');
+      });
+    }
+
+    ee.on('newListener', function handler(event) {
+      if (event !== 'data') return;
+
+      this.removeListener('newListener', handler);
+      t.notOk(this.listeners('newListener').length, 'newListener was removed');
+      process.nextTick(listen);
+    });
+
+    ee.on('drain', function (chunk) {
+      process.nextTick(function () {
+        ee.emit('data', chunk);
+      });
+    });
+
+    ee.on('data', function (chunk) {
+      t.equal(chunk, 'chunk', 'got data event');
+    });
+
+    ee.emit('drain', 'chunk');
   });
 
   t.test("handler registered in context on Readable", function (t) {

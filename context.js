@@ -1,7 +1,7 @@
 'use strict';
 
-var assert = require('assert');
-var wrap   = require('shimmer').wrap;
+var assert  = require('assert');
+var shimmer = require('shimmer');
 
 // load polyfill if native support is unavailable
 if (!process.addAsyncListener) require('async-listener');
@@ -100,8 +100,8 @@ Namespace.prototype.bindEmitter = function (source) {
       }
       finally {
         // old-style streaming overwrites .on and .addListener, so rewrap
-        if (!this.on.__wrapped) wrap(this, 'on', capturer);
-        if (!this.addListener.__wrapped) wrap(this, 'addListener', capturer);
+        if (!this.on.__wrapped) shimmer.wrap(this, 'on', capturer);
+        if (!this.addListener.__wrapped) shimmer.wrap(this, 'addListener', capturer);
       }
     };
   }
@@ -112,31 +112,47 @@ Namespace.prototype.bindEmitter = function (source) {
    */
   function puncher(emit) {
     // find all the handlers with attached contexts
-    function prepare(handlers) {
-      var replacements = [];
-      for (var i = 0; i < handlers.length; i++) {
-        var handler = handlers[i];
-        var context = handler[contextName];
-
-        if (context) handler = namespace.bind(handler, context);
-
-        replacements[i] = handler;
+    function prepare(unwrapped) {
+      if (typeof unwrapped === 'function' && unwrapped[contextName]) {
+        return namespace.bind(unwrapped, unwrapped[contextName]);
       }
+      else if (unwrapped && unwrapped.length) {
+        var replacements = [];
+        for (var i = 0; i < unwrapped.length; i++) {
+          var handler = unwrapped[i];
+          var context = handler[contextName];
 
-      return replacements;
+          if (context) handler = namespace.bind(handler, context);
+
+          replacements[i] = handler;
+        }
+
+        return replacements;
+      }
+      else {
+        return unwrapped;
+      }
     }
 
     return function punched(event) {
       if (!this._events || !this._events[event]) return emit.apply(this, arguments);
 
       // wrap
-      var events = this._events[event];
-      if (typeof events === 'function' && events[contextName]) {
-        this._events[event] = namespace.bind(events, events[contextName]);
+      var unwrapped = this._events[event];
+      function releaser(removeListener) {
+        return function unwrapRemove() {
+          this._events[event] = unwrapped;
+          try {
+            return removeListener.apply(this, arguments);
+          }
+          finally {
+            unwrapped = this._events[event];
+            this._events[event] = prepare(unwrapped);
+          }
+        };
       }
-      else if (events.length) {
-        this._events[event] = prepare(events);
-      }
+      shimmer.wrap(this, 'removeListener', releaser);
+      this._events[event] = prepare(unwrapped);
 
       try {
         // apply
@@ -144,14 +160,15 @@ Namespace.prototype.bindEmitter = function (source) {
       }
       finally {
         // reset
-        this._events[event] = events;
+        shimmer.unwrap(this, 'removeListener');
+        this._events[event] = unwrapped;
       }
     };
   }
 
-  wrap(source, 'addListener', capturer);
-  wrap(source, 'on',          capturer);
-  wrap(source, 'emit',        puncher);
+  shimmer.wrap(source, 'addListener', capturer);
+  shimmer.wrap(source, 'on',          capturer);
+  shimmer.wrap(source, 'emit',        puncher);
 };
 
 function get(name) {
