@@ -13,7 +13,7 @@ function fresh(name, context) {
 }
 
 test("event emitters bound to CLS context", function (t) {
-  t.plan(4);
+  t.plan(6);
 
   t.test("handler registered in context", function (t) {
     t.plan(1);
@@ -26,6 +26,24 @@ test("event emitters bound to CLS context", function (t) {
       n.set('value', 'hello');
       n.bindEmitter(ee);
       ee.on('event', function () {
+        t.equal(n.get('value'), 'hello', "value still set in EE.");
+      });
+    });
+
+    ee.emit('event');
+  });
+
+  t.test("once handler registered in context", function (t) {
+    t.plan(1);
+
+    var n  = fresh('inOnce', this)
+      , ee = new EventEmitter()
+      ;
+
+    n.run(function () {
+      n.set('value', 'hello');
+      n.bindEmitter(ee);
+      ee.once('event', function () {
         t.equal(n.get('value'), 'hello', "value still set in EE.");
       });
     });
@@ -52,20 +70,40 @@ test("event emitters bound to CLS context", function (t) {
     });
   });
 
-  t.test("handler added but used entirely out of context", function (t) {
+  t.test("once handler registered out of context", function (t) {
     t.plan(1);
 
-    var n  = fresh('none', this)
+    var n  = fresh('outOnce', this)
       , ee = new EventEmitter()
       ;
 
-    ee.on('event', function () {
-      t.notOk(n.get('value'), "value shouldn't be visible");
+    ee.once('event', function () {
+      t.equal(n.get('value'), 'hello', "value still set in EE.");
     });
 
     n.run(function () {
       n.set('value', 'hello');
       n.bindEmitter(ee);
+
+      ee.emit('event');
+    });
+  });
+
+  t.test("handler added but used entirely out of context", function (t) {
+    t.plan(2);
+
+    var n  = fresh('none', this)
+      , ee = new EventEmitter()
+      ;
+
+    n.run(function () {
+      n.set('value', 'hello');
+      n.bindEmitter(ee);
+    });
+
+    ee.on('event', function () {
+      t.ok(n, "n is set");
+      t.notOk(n.get('value'), "value shouldn't be visible");
     });
 
     ee.emit('event');

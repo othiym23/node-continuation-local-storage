@@ -87,37 +87,44 @@ Namespace.prototype.bindEmitter = function (source) {
   var namespace = this;
   var contextName = '__' + this.name;
 
+  /**
+   * Attach a context to a listener, and make sure that this hook stays
+   * attached to the emitter forevermore.
+   */
   function capturer(on) {
-    return function (event, listener) {
+    return function captured(event, listener) {
       listener[contextName] = namespace.active;
 
       var returned = on.call(this, event, listener);
 
-      // FIXME: ReadableStreams overwrite on / addListener; find out why
-      wrap(this, 'on',          capturer);
-      wrap(this, 'addListener', capturer);
+      // somebody's using an old-style stream, which overwrites .on
+      if (this.on !== captured) wrap(this, 'on', capturer);
+      if (this.addListener !== captured) wrap(this, 'addListener', capturer);
 
       return returned;
     };
   }
 
-  function prepare(handlers) {
-    var replacements = [];
-    for (var i = 0; i < handlers.length; i++) {
-      var handler = handlers[i];
-      if (handler[contextName]) {
-        replacements.push(namespace.bind(handler, handler[contextName]));
+  /**
+   * Evaluate listeners within the CLS contexts in which they were originally
+   * captured.
+   */
+  function puncher(emit) {
+    // find all the handlers with attached contexts
+    function prepare(handlers) {
+      var replacements = [];
+      for (var i = 0; i < handlers.length; i++) {
+        var handler = handlers[i];
+        if (handler[contextName]) {
+          handler = namespace.bind(handler, handler[contextName]);
+        }
+        replacements[i] = handler;
       }
-      else {
-        replacements.push(handler);
-      }
+
+      return replacements;
     }
 
-    return replacements;
-  }
-
-  function puncher(emit) {
-    return function (event) {
+    return function punched(event) {
       if (!this._events || !this._events[event]) return emit.apply(this, arguments);
 
       // setup
