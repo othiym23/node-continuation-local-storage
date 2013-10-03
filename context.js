@@ -8,7 +8,8 @@ if (!process.addAsyncListener) require('async-listener');
 
 var namespaces;
 
-function Namespace () {
+function Namespace (name) {
+  this.name   = name;
   // every namespace has a default / "global" context
   this.active = Object.create(null);
   this._stack = [];
@@ -85,7 +86,7 @@ Namespace.prototype.bindEmitter = function (source) {
   assert.ok(source.on && source.addListener && source.emit, "can only bind real EEs");
 
   var namespace = this;
-  var contextName = '__' + this.name;
+  var contextName = 'context@' + this.name;
 
   /**
    * Attach a context to a listener, and make sure that this hook stays
@@ -94,14 +95,14 @@ Namespace.prototype.bindEmitter = function (source) {
   function capturer(on) {
     return function captured(event, listener) {
       listener[contextName] = namespace.active;
-
-      var returned = on.call(this, event, listener);
-
-      // somebody's using an old-style stream, which overwrites .on
-      if (this.on !== captured) wrap(this, 'on', capturer);
-      if (this.addListener !== captured) wrap(this, 'addListener', capturer);
-
-      return returned;
+      try {
+        return on.call(this, event, listener);
+      }
+      finally {
+        // old-style streaming overwrites .on and .addListener, so rewrap
+        if (!this.on.__wrapped) wrap(this, 'on', capturer);
+        if (!this.addListener.__wrapped) wrap(this, 'addListener', capturer);
+      }
     };
   }
 
@@ -115,9 +116,10 @@ Namespace.prototype.bindEmitter = function (source) {
       var replacements = [];
       for (var i = 0; i < handlers.length; i++) {
         var handler = handlers[i];
-        if (handler[contextName]) {
-          handler = namespace.bind(handler, handler[contextName]);
-        }
+        var context = handler[contextName];
+
+        if (context) handler = namespace.bind(handler, context);
+
         replacements[i] = handler;
       }
 
@@ -127,7 +129,7 @@ Namespace.prototype.bindEmitter = function (source) {
     return function punched(event) {
       if (!this._events || !this._events[event]) return emit.apply(this, arguments);
 
-      // setup
+      // wrap
       var events = this._events[event];
       if (typeof events === 'function' && events[contextName]) {
         this._events[event] = namespace.bind(events, events[contextName]);
@@ -136,10 +138,14 @@ Namespace.prototype.bindEmitter = function (source) {
         this._events[event] = prepare(events);
       }
 
-      // application
-      var returned = emit.apply(this, arguments);
-      this._events[event] = events;
-      return returned;
+      try {
+        // apply
+        return emit.apply(this, arguments);
+      }
+      finally {
+        // reset
+        this._events[event] = events;
+      }
     };
   }
 
