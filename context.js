@@ -185,7 +185,8 @@ function create(name) {
     },
     {
       before : function (context, domain) { namespace.enter(domain); },
-      after  : function (context, domain) { namespace.exit(domain); }
+      after  : function (context, domain) { namespace.exit(domain); },
+      error  : function (domain) { namespace.exit(domain); }
     }
   );
 
