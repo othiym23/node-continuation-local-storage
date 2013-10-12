@@ -31,7 +31,7 @@
     "tap": "~0.4.2"
   },
   "optionalDependencies": {
-    "async-listener": ">=0.2.2"
+    "async-listener": "=0.3.0"
   },
   "dependencies": {
     "shimmer": "0.7.3"

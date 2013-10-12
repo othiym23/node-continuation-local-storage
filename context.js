@@ -8,7 +8,7 @@ if (!process.addAsyncListener) require('async-listener');
 
 var namespaces;
 
-function Namespace (name) {
+function Namespace(name) {
   this.name   = name;
   // every namespace has a default / "global" context
   this.active = Object.create(null);
@@ -186,7 +186,7 @@ function create(name) {
     {
       before : function (context, domain) { namespace.enter(domain); },
       after  : function (context, domain) { namespace.exit(domain); },
-      error  : function (domain) { namespace.exit(domain); }
+      error  : function (domain) { if (domain) namespace.exit(domain); }
     }
   );
 
