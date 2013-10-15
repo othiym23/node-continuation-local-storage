@@ -1,8 +1,8 @@
 'use strict';
 
-var domain = require('domain')
-  , test   = require('tap').test
+var test   = require('tap').test
   , cls    = require('../context.js')
+  , domain = require('domain')
   ;
 
 test("continuation-local storage glue with a throw in the continuation chain",
