@@ -19,7 +19,7 @@ function Namespace(name) {
   this.name   = name;
   // every namespace has a default / "global" context
   this.active = Object.create(null);
-  this._stack = [];
+  this._set   = [];
   this.id     = null;
 }
 
@@ -65,7 +65,7 @@ Namespace.prototype.bind = function (fn, context) {
 Namespace.prototype.enter = function (context) {
   assert.ok(context, "context must be provided for entering");
 
-  this._stack.push(this.active);
+  this._set.push(this.active);
   this.active = context;
 };
 
@@ -74,19 +74,18 @@ Namespace.prototype.exit = function (context) {
 
   // Fast path for most exits that are at the top of the stack
   if (this.active === context) {
-    assert.ok(this._stack.length, "can't remove top context");
-    this.active = this._stack.pop();
+    assert.ok(this._set.length, "can't remove top context");
+    this.active = this._set.pop();
     return;
   }
 
   // Fast search in the stack using lastIndexOf
-  var index = this._stack.lastIndexOf(context);
+  var index = this._set.lastIndexOf(context);
 
   assert.ok(index >= 0, "context not currently entered; can't exit");
   assert.ok(index,      "can't remove top context");
 
-  this.active = this._stack[index - 1];
-  this._stack.length = index - 1;
+  this._set.splice(index, 1);
 };
 
 Namespace.prototype.bindEmitter = function (emitter) {
@@ -131,9 +130,7 @@ function create(name) {
 
   var namespace = new Namespace(name);
   namespace.id = process.addAsyncListener(
-    function () {
-      return namespace.active;
-    },
+    function () { return namespace.active; },
     {
       before : function (context, domain) { namespace.enter(domain); },
       after  : function (context, domain) { namespace.exit(domain); },

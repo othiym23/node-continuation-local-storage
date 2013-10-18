@@ -320,7 +320,6 @@ test("event emitters bound to CLS context", function (t) {
 
     // emulate an incoming data emitter
     setTimeout(function () {
-      debugger;
       ee.emit('data', 'hi');
     }, 10);
 
