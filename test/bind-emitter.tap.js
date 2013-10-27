@@ -13,7 +13,7 @@ function fresh(name, context) {
 }
 
 test("event emitters bound to CLS context", function (t) {
-  t.plan(10);
+  t.plan(11);
 
   t.test("handler registered in context", function (t) {
     t.plan(1);
@@ -272,7 +272,7 @@ test("event emitters bound to CLS context", function (t) {
     t.plan(2);
 
     var ee = new EventEmitter()
-      , n  = fresh('kaboom', this)
+      , n  = fresh('param_list', this)
       ;
 
     function sent(value) {
@@ -283,6 +283,29 @@ test("event emitters bound to CLS context", function (t) {
     n.bindEmitter(ee);
     t.doesNotThrow(function () {
       ee.emit('send', 3);
+    });
+  });
+
+  t.test("listener that throws doesn't leave removeListener wrapped", function (t) {
+    t.plan(4);
+
+    var ee = new EventEmitter()
+      , n  = fresh('kaboom', this)
+      ;
+
+    n.bindEmitter(ee);
+
+    function kaboom() {
+      throw new Error('whoops');
+    }
+
+    n.run(function () {
+      ee.on('bad', kaboom);
+
+      t.throws(function () { ee.emit('bad'); });
+      t.equal(typeof ee.removeListener, 'function', 'removeListener is still there');
+      t.notOk(ee.removeListener.__wrapped, "removeListener got unwrapped");
+      t.equal(ee._events.bad, kaboom, "listener isn't still bound");
     });
   });
 });
