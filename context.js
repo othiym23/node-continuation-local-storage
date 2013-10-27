@@ -113,10 +113,12 @@ Namespace.prototype.bindEmitter = function (source) {
   function puncher(emit) {
     // find all the handlers with attached contexts
     function prepare(unwrapped) {
+      if (!unwrapped) return;
+
       if (typeof unwrapped === 'function' && unwrapped[contextName]) {
         return namespace.bind(unwrapped, unwrapped[contextName]);
       }
-      else if (unwrapped && unwrapped.length) {
+      else if (Array.isArray(unwrapped) && unwrapped.length) {
         var replacements = [];
         for (var i = 0; i < unwrapped.length; i++) {
           var handler = unwrapped[i];

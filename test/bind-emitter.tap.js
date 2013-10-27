@@ -13,7 +13,7 @@ function fresh(name, context) {
 }
 
 test("event emitters bound to CLS context", function (t) {
-  t.plan(9);
+  t.plan(10);
 
   t.test("handler registered in context", function (t) {
     t.plan(1);
@@ -265,6 +265,24 @@ test("event emitters bound to CLS context", function (t) {
 
         server.close();
       });
+    });
+  });
+
+  t.test("listener with parameters added but not bound to context", function (t) {
+    t.plan(2);
+
+    var ee = new EventEmitter()
+      , n  = fresh('kaboom', this)
+      ;
+
+    function sent(value) {
+      t.equal(value, 3, "sent value is correct");
+    }
+
+    ee.on('send', sent);
+    n.bindEmitter(ee);
+    t.doesNotThrow(function () {
+      ee.emit('send', 3);
     });
   });
 });
