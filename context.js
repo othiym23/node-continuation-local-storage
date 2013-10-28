@@ -88,39 +88,19 @@ Namespace.prototype.bindEmitter = function (emitter) {
   var namespace = this;
   var contextName = 'context@' + this.name;
 
-  function marker(listener) {
+  // Capture the context active at the time the emitter is bound.
+  function attach(listener) {
     listener[contextName] = namespace.active;
   }
 
-  /**
-   * Evaluate listeners within the CLS contexts in which they were originally
-   * captured.
-   */
-  function prepare(unwrapped) {
-    if (!unwrapped) return;
+  // At emit time, bind the listener within the correct context.
+  function bind(unwrapped) {
+    if (!(unwrapped && unwrapped[contextName])) return unwrapped;
 
-    if (typeof unwrapped === 'function' && unwrapped[contextName]) {
-      return namespace.bind(unwrapped, unwrapped[contextName]);
-    }
-    else if (Array.isArray(unwrapped) && unwrapped.length) {
-      var replacements = [];
-      for (var i = 0; i < unwrapped.length; i++) {
-        var handler = unwrapped[i];
-        var context = handler[contextName];
-
-        if (context) handler = namespace.bind(handler, context);
-
-        replacements[i] = handler;
-      }
-
-      return replacements;
-    }
-    else {
-      return unwrapped;
-    }
+    return namespace.bind(unwrapped, unwrapped[contextName]);
   }
 
-  shimmer.wrapEmitter(emitter, marker, prepare);
+  shimmer.wrapEmitter(emitter, attach, bind);
 };
 
 function get(name) {
