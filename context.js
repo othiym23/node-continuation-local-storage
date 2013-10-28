@@ -3,6 +3,13 @@
 var assert  = require('assert');
 var shimmer = require('shimmer');
 
+/*
+ *
+ * CONSTANTS
+ *
+ */
+var CONTEXTS_SYMBOL = 'cls@contexts';
+
 // load polyfill if native support is unavailable
 if (!process.addAsyncListener) require('async-listener');
 
@@ -85,19 +92,31 @@ Namespace.prototype.exit = function (context) {
 Namespace.prototype.bindEmitter = function (emitter) {
   assert.ok(emitter.on && emitter.addListener && emitter.emit, "can only bind real EEs");
 
-  var namespace = this;
-  var contextName = 'context@' + this.name;
+  var namespace  = this;
+  var thisSymbol = 'context@' + this.name;
 
   // Capture the context active at the time the emitter is bound.
   function attach(listener) {
-    listener[contextName] = namespace.active;
+    if (!listener) return;
+    if (!listener[CONTEXTS_SYMBOL]) listener[CONTEXTS_SYMBOL] = Object.create(null);
+
+    listener[CONTEXTS_SYMBOL][thisSymbol] = {
+      namespace : namespace,
+      context   : namespace.active
+    };
   }
 
   // At emit time, bind the listener within the correct context.
   function bind(unwrapped) {
-    if (!(unwrapped && unwrapped[contextName])) return unwrapped;
+    if (!(unwrapped && unwrapped[CONTEXTS_SYMBOL])) return unwrapped;
 
-    return namespace.bind(unwrapped, unwrapped[contextName]);
+    var wrapped  = unwrapped;
+    var contexts = unwrapped[CONTEXTS_SYMBOL];
+    Object.keys(contexts).forEach(function (name) {
+      var thunk = contexts[name];
+      wrapped = thunk.namespace.bind(wrapped, thunk.context);
+    });
+    return wrapped;
   }
 
   shimmer.wrapEmitter(emitter, attach, bind);

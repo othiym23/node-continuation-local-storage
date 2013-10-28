@@ -13,7 +13,7 @@ function fresh(name, context) {
 }
 
 test("event emitters bound to CLS context", function (t) {
-  t.plan(11);
+  t.plan(12);
 
   t.test("handler registered in context", function (t) {
     t.plan(1);
@@ -206,7 +206,8 @@ test("event emitters bound to CLS context", function (t) {
       t.ok(re.addListener.__wrapped, "addListener is still wrapped");
 
       t.equal(typeof re._events.data, 'function', 'only the one data listener');
-      t.ok(re._events.data['context@outOnReadable'], "context is bound to listener");
+      t.ok(re._events.data['cls@contexts']['context@outOnReadable'],
+           "context is bound to listener");
 
       re.emit('data', 'blah');
     }
@@ -306,6 +307,42 @@ test("event emitters bound to CLS context", function (t) {
       t.equal(typeof ee.removeListener, 'function', 'removeListener is still there');
       t.notOk(ee.removeListener.__wrapped, "removeListener got unwrapped");
       t.equal(ee._events.bad, kaboom, "listener isn't still bound");
+    });
+  });
+
+  t.test("emitter bound to multiple namespaces handles them correctly", function (t) {
+    t.plan(6);
+
+    var ee = new EventEmitter()
+      , ns1 = cls.createNamespace('1')
+      , ns2 = cls.createNamespace('2')
+      ;
+
+    // emulate an incoming data emitter
+    setTimeout(function () {
+      debugger;
+      ee.emit('data', 'hi');
+    }, 10);
+
+    ns1.set('name', 'tom1');
+    ns2.set('name', 'tom2');
+
+    t.doesNotThrow(function () { ns1.bindEmitter(ee); });
+    t.doesNotThrow(function () { ns2.bindEmitter(ee); });
+
+    ns1.run(function () {
+      process.nextTick(function () {
+        t.equal(ns1.get('name'), 'tom1', "ns1 value correct");
+        t.equal(ns2.get('name'), 'tom2', "ns2 value correct");
+
+        ns1.set('name', 'bob');
+        ns2.set('name', 'alice');
+
+        ee.on('data', function () {
+          t.equal(ns1.get('name'), 'bob',   "ns1 value bound onto emitter");
+          t.equal(ns2.get('name'), 'alice', "ns2 value bound onto emitter");
+        });
+      });
     });
   });
 });
