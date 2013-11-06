@@ -2,7 +2,6 @@
 
 # Continuation-Local Storage
 
-
 Continuation-local storage works like thread-local storage in threaded
 programming, but is based on chains of Node-style callbacks instead of threads.
 The standard Node convention of functions calling functions is very similar to
