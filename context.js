@@ -3,6 +3,11 @@
 var assert  = require('assert');
 var shimmer = require('shimmer');
 
+// Simplest possible data bag
+function Map () {}
+// ensure that prototype hijinx don't affect CLS
+Map.prototype = Object.create(null);
+
 /*
  *
  * CONSTANTS
@@ -18,7 +23,7 @@ var namespaces;
 function Namespace(name) {
   this.name   = name;
   // every namespace has a default / "global" context
-  this.active = Object.create(null);
+  this.active = new Map();
   this._set   = [];
   this.id     = null;
 }
@@ -33,7 +38,22 @@ Namespace.prototype.get = function (key) {
 };
 
 Namespace.prototype.createContext = function () {
-  return Object.create(this.active);
+  var context = new Map();
+  /*
+   * This is some JSPerf-mediated nonsense: doing an iterative for loop
+   * over the keys is actually significantly faster than using for-in,
+   * especially if Object.hasOwnProperty is involved. We don't need to
+   * use hasOwnProperty because we're inheriting from a constructor
+   * chain over which we have total control, but no sense in tempting
+   * the Furies.
+   *
+   * RIP Object.create(this.active). You were too elegant to live.
+   */
+  var keys = Object.keys(this.active);
+  var length = keys.length;
+  for (var i = 0; i < length; i++) context[keys[i]] = this.active[keys[i]];
+
+  return context;
 };
 
 Namespace.prototype.run = function (fn) {
