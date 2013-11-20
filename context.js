@@ -3,18 +3,21 @@
 var assert  = require('assert');
 var shimmer = require('shimmer');
 
-// Simplest possible data bag
-function Map () {}
-// ensure that prototype hijinx don't affect CLS
-Map.prototype = Object.create(null);
-
 /*
  *
  * CONSTANTS
  *
  */
 var CONTEXTS_SYMBOL = 'cls@contexts';
-var ERROR_SYMBOL = 'error@context';
+var ERROR_SYMBOL    = 'error@context';
+var PARENT_SYMBOL   = 'parent@context';
+
+// simplest possible data bag with a quasi-prototype chain
+function Map (parent) {
+  this[PARENT_SYMBOL] = parent;
+}
+// ensure that prototype hijinx don't affect CLS
+Map.prototype = Object.create(null);
 
 // load polyfill if native support is unavailable
 if (!process.addAsyncListener) require('async-listener');
@@ -35,26 +38,20 @@ Namespace.prototype.set = function (key, value) {
 };
 
 Namespace.prototype.get = function (key) {
-  return this.active[key];
+  var context = this.active;
+  do {
+    if (key in context) return context[key];
+  } while ((context = context[PARENT_SYMBOL]) !== undefined);
 };
 
 Namespace.prototype.createContext = function () {
-  var context = new Map();
   /*
-   * This is some JSPerf-mediated nonsense: doing an iterative for loop
-   * over the keys is actually significantly faster than using for-in,
-   * especially if Object.hasOwnProperty is involved. We don't need to
-   * use hasOwnProperty because we're inheriting from a constructor
-   * chain over which we have total control, but no sense in tempting
-   * the Furies.
+   * Object.create() is just brutally slow, so we create and manage
+   * our own parent-child relationship that lets us simulate.
    *
    * RIP Object.create(this.active). You were too elegant to live.
    */
-  var keys = Object.keys(this.active);
-  var length = keys.length;
-  for (var i = 0; i < length; i++) context[keys[i]] = this.active[keys[i]];
-
-  return context;
+  return new Map(this.active);
 };
 
 Namespace.prototype.run = function (fn) {
