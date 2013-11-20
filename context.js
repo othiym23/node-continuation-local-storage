@@ -150,6 +150,12 @@ Namespace.prototype.bindEmitter = function (emitter) {
   shimmer.wrapEmitter(emitter, attach, bind);
 };
 
+/**
+ * If an error comes out of a namespace, it will have a context attached to it.
+ * This function knows how to find it.
+ *
+ * @param {Error} exception Possibly annotated error.
+ */
 Namespace.prototype.fromException = function (exception) {
   return exception[ERROR_SYMBOL];
 };
