@@ -14,6 +14,7 @@ Map.prototype = Object.create(null);
  *
  */
 var CONTEXTS_SYMBOL = 'cls@contexts';
+var ERROR_SYMBOL = 'error@context';
 
 // load polyfill if native support is unavailable
 if (!process.addAsyncListener) require('async-listener');
@@ -63,6 +64,10 @@ Namespace.prototype.run = function (fn) {
     fn(context);
     return context;
   }
+  catch (exception) {
+    exception[ERROR_SYMBOL] = context;
+    throw exception;
+  }
   finally {
     this.exit(context);
   }
@@ -75,6 +80,10 @@ Namespace.prototype.bind = function (fn, context) {
     self.enter(context);
     try {
       return fn.apply(this, arguments);
+    }
+    catch (exception) {
+      exception[ERROR_SYMBOL] = context;
+      throw exception;
     }
     finally {
       self.exit(context);
@@ -139,6 +148,10 @@ Namespace.prototype.bindEmitter = function (emitter) {
   }
 
   shimmer.wrapEmitter(emitter, attach, bind);
+};
+
+Namespace.prototype.fromException = function (exception) {
+  return exception[ERROR_SYMBOL];
 };
 
 function get(name) {
