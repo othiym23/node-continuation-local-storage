@@ -1,7 +1,7 @@
 'use strict';
 
-var assert  = require('assert');
-var shimmer = require('shimmer');
+var assert      = require('assert');
+var wrapEmitter = require('emitter-listener');
 
 /*
  *
@@ -127,7 +127,7 @@ Namespace.prototype.bindEmitter = function (emitter) {
     return wrapped;
   }
 
-  shimmer.wrapEmitter(emitter, attach, bind);
+  wrapEmitter(emitter, attach, bind);
 };
 
 /**
