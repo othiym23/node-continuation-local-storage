@@ -36,36 +36,38 @@ test("nested contexts on a single namespace", function (t) {
 
 test("the example from the docs", function (t) {
   var writer = cls.createNamespace('writer');
-  writer.set('value', 0);
+  writer.run(function () {
+    writer.set('value', 0);
 
-  t.equal(writer.get('value'), 0, "outer hasn't been entered yet");
-  function requestHandler() {
-    writer.run(function (outer) {
-      t.equal(writer.active, outer, "writer.active == outer");
-
-      writer.set('value', 1);
-      t.equal(writer.get('value'), 1, "writer.active == outer");
-      t.equal(outer.value, 1, "outer is active");
-
-      process.nextTick(function () {
+    t.equal(writer.get('value'), 0, "outer hasn't been entered yet");
+    function requestHandler() {
+      writer.run(function (outer) {
         t.equal(writer.active, outer, "writer.active == outer");
-        t.equal(writer.get('value'), 1, "inner has been entered");
-        writer.run(function (inner) {
-          t.equal(writer.active, inner, "writer.active == inner");
 
-          writer.set('value', 2);
-          t.equal(outer.value, 1, "outer is unchanged");
-          t.equal(inner.value, 2, "inner is active");
-          t.equal(writer.get('value'), 2, "writer.active == inner");
+        writer.set('value', 1);
+        t.equal(writer.get('value'), 1, "writer.active == outer");
+        t.equal(outer.value, 1, "outer is active");
+
+        process.nextTick(function () {
+          t.equal(writer.active, outer, "writer.active == outer");
+          t.equal(writer.get('value'), 1, "inner has been entered");
+          writer.run(function (inner) {
+            t.equal(writer.active, inner, "writer.active == inner");
+
+            writer.set('value', 2);
+            t.equal(outer.value, 1, "outer is unchanged");
+            t.equal(inner.value, 2, "inner is active");
+            t.equal(writer.get('value'), 2, "writer.active == inner");
+          });
         });
       });
-    });
 
-    setTimeout(function () {
-      t.equal(writer.get('value'), 0, "writer.active == global");
-      t.end();
-    }, 100);
-  }
+      setTimeout(function () {
+        t.equal(writer.get('value'), 0, "writer.active == global");
+        t.end();
+      }, 100);
+    }
 
-  requestHandler();
+    requestHandler();
+  });
 });

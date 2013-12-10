@@ -311,7 +311,7 @@ test("event emitters bound to CLS context", function (t) {
   });
 
   t.test("emitter bound to multiple namespaces handles them correctly", function (t) {
-    t.plan(6);
+    t.plan(8);
 
     var ee = new EventEmitter()
       , ns1 = cls.createNamespace('1')
@@ -323,23 +323,30 @@ test("event emitters bound to CLS context", function (t) {
       ee.emit('data', 'hi');
     }, 10);
 
-    ns1.set('name', 'tom1');
-    ns2.set('name', 'tom2');
-
     t.doesNotThrow(function () { ns1.bindEmitter(ee); });
     t.doesNotThrow(function () { ns2.bindEmitter(ee); });
 
     ns1.run(function () {
-      process.nextTick(function () {
-        t.equal(ns1.get('name'), 'tom1', "ns1 value correct");
-        t.equal(ns2.get('name'), 'tom2', "ns2 value correct");
+      ns2.run(function () {
+        ns1.set('name', 'tom1');
+        ns2.set('name', 'tom2');
 
-        ns1.set('name', 'bob');
-        ns2.set('name', 'alice');
+        t.doesNotThrow(function () { ns1.bindEmitter(ee); });
+        t.doesNotThrow(function () { ns2.bindEmitter(ee); });
 
-        ee.on('data', function () {
-          t.equal(ns1.get('name'), 'bob',   "ns1 value bound onto emitter");
-          t.equal(ns2.get('name'), 'alice', "ns2 value bound onto emitter");
+        ns1.run(function () {
+          process.nextTick(function () {
+            t.equal(ns1.get('name'), 'tom1', "ns1 value correct");
+            t.equal(ns2.get('name'), 'tom2', "ns2 value correct");
+
+            ns1.set('name', 'bob');
+            ns2.set('name', 'alice');
+
+            ee.on('data', function () {
+              t.equal(ns1.get('name'), 'bob',   "ns1 value bound onto emitter");
+              t.equal(ns2.get('name'), 'alice', "ns2 value bound onto emitter");
+            });
+          });
         });
       });
     });

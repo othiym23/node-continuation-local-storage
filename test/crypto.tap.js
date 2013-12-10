@@ -8,21 +8,23 @@ var tap             = require('tap')
 var crypto;
 try { crypto = require('crypto'); }
 catch (err) {}
-if (crypto) {
 
+if (crypto) {
   test("continuation-local state with crypto.randomBytes", function (t) {
     t.plan(1);
 
     var namespace = createNamespace('namespace');
-    namespace.set('test', 0xabad1dea);
+    namespace.run(function () {
+      namespace.set('test', 0xabad1dea);
 
-    t.test("deflate", function (t) {
-      namespace.run(function () {
-        namespace.set('test', 42);
-        crypto.randomBytes(100, function (err, bytes) {
-          if (err) throw err;
-          t.equal(namespace.get('test'), 42, "mutated state was preserved");
-          t.end();
+      t.test("deflate", function (t) {
+        namespace.run(function () {
+          namespace.set('test', 42);
+          crypto.randomBytes(100, function (err) {
+            if (err) throw err;
+            t.equal(namespace.get('test'), 42, "mutated state was preserved");
+            t.end();
+          });
         });
       });
     });
@@ -32,15 +34,17 @@ if (crypto) {
     t.plan(1);
 
     var namespace = createNamespace('namespace');
-    namespace.set('test', 0xabad1dea);
+    namespace.run(function () {
+      namespace.set('test', 0xabad1dea);
 
-    t.test("deflate", function (t) {
-      namespace.run(function () {
-        namespace.set('test', 42);
-        crypto.pseudoRandomBytes(100, function (err, bytes) {
-          if (err) throw err;
-          t.equal(namespace.get('test'), 42, "mutated state was preserved");
-          t.end();
+      t.test("deflate", function (t) {
+        namespace.run(function () {
+          namespace.set('test', 42);
+          crypto.pseudoRandomBytes(100, function (err) {
+            if (err) throw err;
+            t.equal(namespace.get('test'), 42, "mutated state was preserved");
+            t.end();
+          });
         });
       });
     });
@@ -50,19 +54,19 @@ if (crypto) {
     t.plan(1);
 
     var namespace = createNamespace('namespace');
-    namespace.set('test', 0xabad1dea);
+    namespace.run(function () {
+      namespace.set('test', 0xabad1dea);
 
-    t.test("deflate", function (t) {
-      namespace.run(function () {
-        namespace.set('test', 42);
-        crypto.pbkdf2("s3cr3tz", "451243", 10, 40, function (err, key) {
-          if (err) throw err;
-          t.equal(namespace.get('test'), 42, "mutated state was preserved");
-          t.end();
+      t.test("deflate", function (t) {
+        namespace.run(function () {
+          namespace.set('test', 42);
+          crypto.pbkdf2("s3cr3tz", "451243", 10, 40, function (err) {
+            if (err) throw err;
+            t.equal(namespace.get('test'), 42, "mutated state was preserved");
+            t.end();
+          });
         });
       });
     });
   });
-
 }
-

@@ -18,18 +18,24 @@ var namespaces;
 
 function Namespace(name) {
   this.name   = name;
-  // every namespace has a default / "global" context
-  this.active = Object.create(null);
+  // changed in 2.7: no default context
+  this.active = null;
   this._set   = [];
   this.id     = null;
 }
 
 Namespace.prototype.set = function (key, value) {
+  if (!this.active) {
+    throw new Error("No context available. ns.run() or ns.bind() must be called first.");
+  }
+
   this.active[key] = value;
   return value;
 };
 
 Namespace.prototype.get = function (key) {
+  if (!this.active) return undefined;
+
   return this.active[key];
 };
 
@@ -54,7 +60,15 @@ Namespace.prototype.run = function (fn) {
 };
 
 Namespace.prototype.bind = function (fn, context) {
-  if (!context) context = this.active;
+  if (!context) {
+    if (!this.active) {
+      context = Object.create(this.active);
+    }
+    else {
+      context = this.active;
+    }
+  }
+
   var self = this;
   return function () {
     self.enter(context);
@@ -151,8 +165,8 @@ function create(name) {
   namespace.id = process.addAsyncListener(
     function () { return namespace.active; },
     {
-      before : function (context, domain) { namespace.enter(domain); },
-      after  : function (context, domain) { namespace.exit(domain); },
+      before : function (context, domain) { if (domain) namespace.enter(domain); },
+      after  : function (context, domain) { if (domain) namespace.exit(domain); },
       error  : function (domain) { if (domain) namespace.exit(domain); }
     }
   );

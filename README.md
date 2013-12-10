@@ -77,7 +77,11 @@ A simple, annotated example of how this nesting behaves:
 var createNamespace = require('contination-local-storage').createNamespace;
 
 var writer = createNamespace('writer');
-writer.set('value', 0);
+writer.run(function () {
+  writer.set('value', 0);
+
+  requestHandler();
+});
 
 function requestHandler() {
   writer.run(function(outer) {
@@ -160,7 +164,8 @@ whose calls originate from a callback passed to `namespace.run()` or
 
 * return: `value`
 
-Set a value on the current continuation context.
+Set a value on the current continuation context. Must be set within an active
+continuation chain started with `namespace.run()` or `namespace.bind()`.
 
 ### namespace.get(key)
 
@@ -168,7 +173,8 @@ Set a value on the current continuation context.
 
 Look up a value on the current continuation context. Recursively searches from
 the innermost to outermost nested continuation context for a value associated
-with a given key.
+with a given key. Must be set within an active continuation chain started with
+`namespace.run()` or `namespace.bind()`.
 
 ### namespace.run(callback)
 
@@ -186,7 +192,8 @@ whne it's called.
 
 Bind a function to the specified namespace. Works analogously to
 `Function.bind()` or `domain.bind()`. If context is omitted, it will default to
-the currently active context in the namespace.
+the currently active context in the namespace, or create a new context if none
+is currently defined.
 
 ### namespace.bindEmitter(emitter)
 
