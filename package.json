@@ -31,7 +31,7 @@
     "tap": "~0.4.2"
   },
   "optionalDependencies": {
-    "async-listener": "0.4.5"
+    "async-listener": "0.4.7"
   },
   "dependencies": {
     "emitter-listener": "1.0.1"

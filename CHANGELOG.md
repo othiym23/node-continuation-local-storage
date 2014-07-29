@@ -1,3 +1,7 @@
+### v3.1.0 (2014-07-28):
+
+* Updated to use `async-listener@0.4.7` to pick up bug fixes.
+
 ### v3.0.0 (2013-12-14):
 
 * Removed the notion of a "default" or "global" context per namespace. It only

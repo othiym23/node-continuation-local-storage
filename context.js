@@ -162,14 +162,12 @@ function create(name) {
   assert.ok(name, "namespace must be given a name!");
 
   var namespace = new Namespace(name);
-  namespace.id = process.addAsyncListener(
-    function () { return namespace.active; },
-    {
-      before : function (context, domain) { if (domain) namespace.enter(domain); },
-      after  : function (context, domain) { if (domain) namespace.exit(domain); },
-      error  : function (domain) { if (domain) namespace.exit(domain); }
-    }
-  );
+  namespace.id = process.addAsyncListener({
+    create : function () { return namespace.active; },
+    before : function (context, storage) { if (storage) namespace.enter(storage); },
+    after  : function (context, storage) { if (storage) namespace.exit(storage); },
+    error  : function (storage) { if (storage) namespace.exit(storage); }
+  });
 
   namespaces[name] = namespace;
   return namespace;
