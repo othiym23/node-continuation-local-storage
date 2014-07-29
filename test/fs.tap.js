@@ -354,7 +354,11 @@ test("continuation-local state with MakeCallback and fs module", function (t) {
           t.equal(namespace.get('test'), 'lstat',
                   "mutated state has persisted to fs.lstat's callback");
 
-          t.equal(stats.mode.toString(8), '120777', "permissions should be as created");
+          t.equal(
+            (stats.mode ^ process.umask()).toString(8),
+            '120777',
+            "permissions should be as created"
+          );
 
           deleteLink();
           t.end();
