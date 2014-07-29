@@ -14,9 +14,9 @@ test("continuation-local storage glue with a throw in the continuation chain",
 
     d.on('error', function (blerg) {
       t.equal(blerg.message, "explicitly nonlocal exit", "got the expected exception");
-      t.notOk(namespace.get('outer'), "outer context should have been exited by throw");
+      t.ok(namespace.get('outer'), "outer context is still active");
       t.notOk(namespace.get('inner'), "inner context should have been exited by throw");
-      t.equal(namespace._set.length, 0, "should be back to global state");
+      t.equal(namespace._set.length, 1, "should be back to outer state");
 
       cls.destroyNamespace('test');
       t.end();
