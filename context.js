@@ -14,8 +14,6 @@ var ERROR_SYMBOL = 'error@context';
 // load polyfill if native support is unavailable
 if (!process.addAsyncListener) require('async-listener');
 
-var namespaces;
-
 function Namespace(name) {
   this.name   = name;
   // changed in 2.7: no default context
@@ -155,7 +153,7 @@ Namespace.prototype.fromException = function (exception) {
 };
 
 function get(name) {
-  return namespaces[name];
+  return process.namespaces[name];
 }
 
 function create(name) {
@@ -169,7 +167,7 @@ function create(name) {
     error  : function (storage) { if (storage) namespace.exit(storage); }
   });
 
-  namespaces[name] = namespace;
+  process.namespaces[name] = namespace;
   return namespace;
 }
 
@@ -180,19 +178,19 @@ function destroy(name) {
   assert.ok(namespace.id, "don't assign to process.namespaces directly!");
 
   process.removeAsyncListener(namespace.id);
-  namespaces[name] = null;
+  process.namespaces[name] = null;
 }
 
 function reset() {
   // must unregister async listeners
-  if (namespaces) {
-    Object.keys(namespaces).forEach(function (name) {
+  if (process.namespaces) {
+    Object.keys(process.namespaces).forEach(function (name) {
       destroy(name);
     });
   }
-  namespaces = process.namespaces = Object.create(null);
+  process.namespaces = Object.create(null);
 }
-reset(); // call immediately to set up
+if (!process.namespaces) reset(); // call immediately to set up
 
 module.exports = {
   getNamespace     : get,
