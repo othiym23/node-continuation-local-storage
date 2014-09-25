@@ -13,9 +13,9 @@ function fresh(name, context) {
 }
 
 test("event emitters bound to CLS context", function (t) {
-  t.plan(12);
+  t.plan(13);
 
-  t.test("handler registered in context", function (t) {
+  t.test("handler registered in context, emit out of context", function (t) {
     t.plan(1);
 
     var n  = fresh('in', this)
@@ -51,7 +51,7 @@ test("event emitters bound to CLS context", function (t) {
     ee.emit('event');
   });
 
-  t.test("handler registered out of context", function (t) {
+  t.test("handler registered out of context, emit in context", function (t) {
     t.plan(1);
 
     var n  = fresh('out', this)
@@ -87,6 +87,25 @@ test("event emitters bound to CLS context", function (t) {
 
       ee.emit('event');
     });
+  });
+
+  t.test("handler registered out of context, emit out of context", function (t) {
+    t.plan(1);
+
+    var n  = fresh('out', this)
+      , ee = new EventEmitter()
+      ;
+
+    ee.on('event', function () {
+      t.equal(n.get('value'), undefined, "no context.");
+    });
+
+    n.run(function () {
+      n.set('value', 'hello');
+      n.bindEmitter(ee);
+    });
+
+    ee.emit('event');
   });
 
   t.test("once handler registered out of context on Readable", function (t) {
