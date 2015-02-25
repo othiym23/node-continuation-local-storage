@@ -184,7 +184,7 @@ Create a new context on which values can be set or read. Run all the functions
 that are called (either directly, or indirectly through asynchronous functions
 that take callbacks themselves) from the provided callback within the scope of
 that namespace. The new context is passed as an argument to the callback
-whne it's called.
+when it's called.
 
 ### namespace.bind(callback, [context])
 
