@@ -1,6 +1,6 @@
 {
   "name": "continuation-local-storage",
-  "version": "3.1.3",
+  "version": "3.1.4",
   "description": "userland implementation of https://github.com/joyent/node/issues/5243",
   "main": "context.js",
   "directories": {
