@@ -208,8 +208,8 @@ are doing other things with HTTP listeners:
 
 ```javascript
 http.createServer(function (req, res) {
-  writer.add(req);
-  writer.add(res);
+  writer.bindEmitter(req);
+  writer.bindEmitter(res);
 
   // do other stuff, some of which is asynchronous
 });
