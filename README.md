@@ -74,7 +74,7 @@ overwriting the parent's.
 A simple, annotated example of how this nesting behaves:
 
 ```javascript
-var createNamespace = require('contination-local-storage').createNamespace;
+var createNamespace = require('continuation-local-storage').createNamespace;
 
 var writer = createNamespace('writer');
 writer.run(function () {
