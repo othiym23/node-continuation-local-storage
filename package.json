@@ -1,5 +1,5 @@
 {
-  "name": "continuation-local-storage",
+  "name": "@ali/continuation-local-storage",
   "version": "3.1.4",
   "description": "userland implementation of https://github.com/joyent/node/issues/5243",
   "main": "context.js",
@@ -33,5 +33,8 @@
   "dependencies": {
     "async-listener": "^0.5.0",
     "emitter-listener": "^1.0.1"
+  },
+  "publishConfig": {
+    "registry": "http://registry.npm.alibaba-inc.com"
   }
 }
