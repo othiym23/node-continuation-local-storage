@@ -7,15 +7,17 @@ var EventEmitter = require('events').EventEmitter
   ;
 
 var nextID = 1;
-function fresh(name, test) {
+function fresh(name) {
   assert.ok(!cls.getNamespace(name), "namespace " + name + " already exists");
-
-  // set it up for demolition immediately
-  test.tearDown(function () {
-    cls.destroyNamespace(name);
-    assert.ok(!cls.getNamespace(name), "namespace " + name + " should no longer exist");
-  });
   return cls.createNamespace(name);
+}
+
+function destroy(name) {
+  return function destroyer(t) {
+    cls.destroyNamespace(name);
+    assert.ok(!cls.getNamespace(name), "namespace '" + name + "' should no longer exist");
+    t.end();
+  };
 }
 
 function runInTransaction(name, fn) {
@@ -28,7 +30,7 @@ function runInTransaction(name, fn) {
 }
 
 test("asynchronous state propagation", function (t) {
-  t.plan(12);
+  t.plan(24);
 
   t.test("a. async transaction with setTimeout", function (t) {
     t.plan(2);
@@ -42,6 +44,8 @@ test("asynchronous state propagation", function (t) {
     t.notOk(namespace.get('transaction'), "transaction should not yet be visible");
     runInTransaction('a', function () { setTimeout(handler, 100); });
   });
+
+  t.test("a. cleanup", destroy('a'));
 
   t.test("b. async transaction with setInterval", function (t) {
     t.plan(4);
@@ -61,6 +65,8 @@ test("asynchronous state propagation", function (t) {
     runInTransaction('b', function () { handle = setInterval(handler, 50); });
   });
 
+  t.test("b. cleanup", destroy('b'));
+
   t.test("c. async transaction with process.nextTick", function (t) {
     t.plan(2);
 
@@ -73,6 +79,8 @@ test("asynchronous state propagation", function (t) {
     t.notOk(namespace.get('transaction'), "transaction should not yet be visible");
     runInTransaction('c', function () { process.nextTick(handler); });
   });
+
+  t.test("c. cleanup", destroy('c'));
 
   t.test("d. async transaction with EventEmitter.emit", function (t) {
     t.plan(2);
@@ -91,6 +99,8 @@ test("asynchronous state propagation", function (t) {
       ee.emit('transaction');
     });
   });
+
+  t.test("d. cleanup", destroy('d'));
 
   t.test("e. two overlapping async transactions with setTimeout", function (t) {
     t.plan(6);
@@ -119,6 +129,8 @@ test("asynchronous state propagation", function (t) {
       });
     }, 25);
   });
+
+  t.test("e. cleanup", destroy('e'));
 
   t.test("f. two overlapping async transactions with setInterval", function (t) {
     t.plan(15);
@@ -151,6 +163,8 @@ test("asynchronous state propagation", function (t) {
     runInterval(); runInterval();
   });
 
+  t.test("f. cleanup", destroy('f'));
+
   t.test("g. two overlapping async transactions with process.nextTick", function (t) {
     t.plan(6);
 
@@ -180,6 +194,8 @@ test("asynchronous state propagation", function (t) {
     });
   });
 
+  t.test("g. cleanup", destroy('g'));
+
   t.test("h. two overlapping async runs with EventEmitter.prototype.emit", function (t) {
     t.plan(3);
 
@@ -200,6 +216,8 @@ test("asynchronous state propagation", function (t) {
     runInTransaction('h', lifecycle);
     runInTransaction('h', lifecycle);
   });
+
+  t.test("h. cleanup", destroy('h'));
 
   t.test("i. async transaction with an async sub-call with setTimeout", function (t) {
     t.plan(5);
@@ -226,6 +244,8 @@ test("asynchronous state propagation", function (t) {
     t.notOk(namespace.get('transaction'), "transaction should not yet be visible");
     runInTransaction('i', setTimeout.bind(null, outer, 50));
   });
+
+  t.test("i. cleanup", destroy('i'));
 
   t.test("j. async transaction with an async sub-call with setInterval", function (t) {
     t.plan(5);
@@ -258,6 +278,8 @@ test("asynchronous state propagation", function (t) {
     runInTransaction('j', outer);
   });
 
+  t.test("j. cleanup", destroy('j'));
+
   t.test("k. async transaction with an async call with process.nextTick", function (t) {
     t.plan(5);
 
@@ -284,6 +306,8 @@ test("asynchronous state propagation", function (t) {
     runInTransaction('k', function () { process.nextTick(outer); });
   });
 
+  t.test("k. cleanup", destroy('k'));
+
   t.test("l. async transaction with an async call with EventEmitter.emit", function (t) {
     t.plan(4);
 
@@ -309,4 +333,6 @@ test("asynchronous state propagation", function (t) {
     t.notOk(namespace.get('transaction'), "transaction should not yet be visible");
     runInTransaction('l', outer.emit.bind(outer, 'ping'));
   });
+
+  t.test("l. cleanup", destroy('l'));
 });

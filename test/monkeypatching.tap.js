@@ -12,8 +12,7 @@ if (!process.addAsyncListener) {
 
   test("overwriting domain helpers", function (t) {
     // domain helpers were only in 0.10.x
-    if (!(process._nextDomainTick ||
-          process._tickDomainCallback)) {
+    if (!(process._nextDomainTick && process._tickDomainCallback)) {
       return t.end();
     }
 

@@ -355,7 +355,7 @@ test("continuation-local state with MakeCallback and fs module", function (t) {
                   "mutated state has persisted to fs.lstat's callback");
 
           t.equal(
-            (stats.mode ^ process.umask()).toString(8),
+            stats.mode.toString(8),
             '120777',
             "permissions should be as created"
           );
@@ -572,38 +572,9 @@ test("continuation-local state with MakeCallback and fs module", function (t) {
           });
         });
 
-        process.nextTick(function poke() {
+        setTimeout(function poke() {
           fs.writeFileSync(FILENAME, 'still a test');
-        });
-      });
-    });
-
-    t.test("fs.watchFile", function (t) {
-      createFile(t);
-
-      namespace.run(function () {
-        namespace.set('test', 'watchFile');
-        t.equal(namespace.get('test'), 'watchFile', "state has been mutated");
-
-        fs.watchFile(FILENAME,
-                     {persistent : false, interval : 200},
-                     function (before, after) {
-          t.equal(namespace.get('test'), 'watchFile',
-                  "mutated state has persisted to fs.watchFile's callback");
-
-          t.ok(before.ino, "file has an entry");
-          t.equal(before.ino, after.ino, "file is at the same location");
-
-          fs.unwatchFile(FILENAME);
-          process.nextTick(function () {
-            deleteFile();
-            t.end();
-          });
-        });
-
-        process.nextTick(function poke() {
-          fs.writeFileSync(FILENAME, 'still a test');
-        });
+        }, 20);
       });
     });
 
@@ -884,6 +855,35 @@ test("continuation-local state with MakeCallback and fs module", function (t) {
             t.end();
           });
         });
+      });
+    });
+
+    t.test("fs.watchFile", function (t) {
+      createFile(t);
+
+      namespace.run(function () {
+        namespace.set('test', 'watchFile');
+        t.equal(namespace.get('test'), 'watchFile', "state has been mutated");
+
+        fs.watchFile(FILENAME,
+                     {persistent : false, interval : 20},
+                     function (before, after) {
+          t.equal(namespace.get('test'), 'watchFile',
+                  "mutated state has persisted to fs.watchFile's callback");
+
+          t.ok(before.ino, "file has an entry");
+          t.equal(before.ino, after.ino, "file is at the same location");
+
+          fs.unwatchFile(FILENAME);
+          process.nextTick(function () {
+            deleteFile();
+            t.end();
+          });
+        });
+
+        setTimeout(function poke() {
+          fs.appendFileSync(FILENAME, 'still a test');
+        }, 20);
       });
     });
   });
