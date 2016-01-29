@@ -74,7 +74,9 @@ Namespace.prototype.bind = function (fn, context) {
       return fn.apply(this, arguments);
     }
     catch (exception) {
-      exception[ERROR_SYMBOL] = context;
+      if (exception) {
+        exception[ERROR_SYMBOL] = context;
+      }
       throw exception;
     }
     finally {
