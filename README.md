@@ -241,8 +241,20 @@ setInterval(function () {
 
 A context is a plain object created using the enclosing context as its prototype.
 
-[timer functions]: timers.html
-[setImmediate]:    timers.html#timers_setimmediate_callback_arg
-[setTimeout]:      timers.html#timers_settimeout_callback_delay_arg
-[setInterval]:     timers.html#timers_setinterval_callback_delay_arg
+# copyright & license
+
+See [LICENSE](https://github.com/othiym23/node-continuation-local-storage/blob/master/LICENSE)
+for the details of the BSD 2-clause "simplified" license used by
+`continuation-local-storage`. This package was developed in 2012-2013 (and is
+maintained now) by Forrest L Norvell, [@othiym23](https://github.com/othiym23),
+with considerable help from Timothy Caswell,
+[@creationix](https://github.com/creationix), working for The Node Firm. This
+work was underwritten by New Relic for use in their Node.js instrumentation
+agent, so maybe give that a look if you have some Node.js
+performance-monitoring needs.
+
+[timer functions]: https://nodejs.org/api/timers.html
+[setImmediate]:    https://nodejs.org/api/timers.html#timers_setimmediate_callback_arg
+[setTimeout]:      https://nodejs.org/api/timers.html#timers_settimeout_callback_delay_arg
+[setInterval]:     https://nodejs.org/api/timers.html#timers_setinterval_callback_delay_arg
 [cps]:             http://en.wikipedia.org/wiki/Continuation-passing_style
