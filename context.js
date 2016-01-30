@@ -196,5 +196,11 @@ module.exports = {
   getNamespace     : get,
   createNamespace  : create,
   destroyNamespace : destroy,
-  reset            : reset
+  reset            : reset,
+  getSharedNamespace: function () {
+    if (!process.sharedNamespace) {
+      process.sharedNamespace = create('shared_' + Date.now() + '_' + Math.random());
+    }
+    return process.sharedNamespace;
+  }
 };
