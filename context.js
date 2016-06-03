@@ -165,7 +165,7 @@ function create(name) {
 
   var namespace = new Namespace(name);
   namespace.id = process.addAsyncListener({
-    create : function () { return namespace.active; },
+    create : function () { return namespace.createContext(); },
     before : function (context, storage) { if (storage) namespace.enter(storage); },
     after  : function (context, storage) { if (storage) namespace.exit(storage); },
     error  : function (storage) { if (storage) namespace.exit(storage); }

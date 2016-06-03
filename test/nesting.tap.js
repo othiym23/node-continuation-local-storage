@@ -49,7 +49,7 @@ test("the example from the docs", function (t) {
         t.equal(outer.value, 1, "outer is active");
 
         process.nextTick(function () {
-          t.equal(writer.active, outer, "writer.active == outer");
+          t.equal(writer.active.value, outer.value, "writer.active.value == outer.value");
           t.equal(writer.get('value'), 1, "inner has been entered");
           writer.run(function (inner) {
             t.equal(writer.active, inner, "writer.active == inner");

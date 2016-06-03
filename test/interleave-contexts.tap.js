@@ -10,7 +10,7 @@ function cleanNamespace(name){
 }
 
 test("interleaved contexts", function (t) {
-  t.plan(3);
+  t.plan(4);
 
   t.test("interleaving with run", function (t) {
     t.plan(2);
@@ -54,5 +54,39 @@ test("interleaved contexts", function (t) {
 
     t.doesNotThrow(function () { ns.exit(ctx1); });
     t.doesNotThrow(function () { ns.exit(ctx2); });
+  });
+
+  t.test("interleave with process.nextTick()", function (t) {
+    var ns = cleanNamespace('test');
+
+    ns.run(function() {
+      ns.set('value', 0);
+
+      process.nextTick(function () {
+        t.equal(ns.get('value'), 0, "context has changed");
+        ns.set('value', 1);
+        t.equal(ns.get('value'), 1, "context has changed");
+
+        process.nextTick(function () {
+          t.equal(ns.get('value'), 1, "context has changed");
+          ns.set('value', 3);
+          t.equal(ns.get('value'), 3, "context has changed");
+        });
+      });
+
+      process.nextTick(function () {
+        t.equal(ns.get('value'), 0, "context has changed");
+        ns.set('value', 2);
+        t.equal(ns.get('value'), 2, "context has changed");
+
+        process.nextTick(function () {
+          t.equal(ns.get('value'), 2, "context has changed");
+          ns.set('value', 4);
+          t.equal(ns.get('value'), 4, "context has changed");
+
+          t.end();
+        });
+      });
+    });
   });
 });
