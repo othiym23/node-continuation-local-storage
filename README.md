@@ -186,6 +186,19 @@ that take callbacks themselves) from the provided callback within the scope of
 that namespace. The new context is passed as an argument to the callback
 when it's called.
 
+### namespace.runAndReturn(callback)
+
+* return: the return value of the callback
+
+Create a new context on which values can be set or read. Run all the functions
+that are called (either directly, or indirectly through asynchronous functions
+that take callbacks themselves) from the provided callback within the scope of
+that namespace. The new context is passed as an argument to the callback
+when it's called.
+
+Same as `namespace.run()` but returns the return value of the callback rather
+than the context.
+
 ### namespace.bind(callback, [context])
 
 * return: a callback wrapped up in a context closure
