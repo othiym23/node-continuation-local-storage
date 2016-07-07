@@ -112,13 +112,17 @@ function requestHandler() {
 }
 ```
 
-## cls.createNamespace(name)
+## cls.createNamespace(name, [options])
 
 * return: {Namespace}
 
 Each application wanting to use continuation-local values should create its own
 namespace. Reading from (or, more significantly, writing to) namespaces that
 don't belong to you is a faux pas.
+
+By default the current context will be added to any thrown error running in a
+namespace. If you wish to disable this behavior, set `options.injectErrorContext`
+to `false` (defaults to `true`).
 
 ## cls.getNamespace(name)
 
