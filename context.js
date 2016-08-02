@@ -82,7 +82,12 @@ Namespace.prototype.bind = function (fn, context) {
     }
     catch (exception) {
       if (exception) {
-        exception[ERROR_SYMBOL] = context;
+        Object.defineProperty(exception, ERROR_SYMBOL, {
+          configurable: false,
+          enumerable: false,
+          writable: false,
+          value: context
+        });
       }
       throw exception;
     }
