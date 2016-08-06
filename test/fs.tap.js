@@ -866,7 +866,7 @@ test("continuation-local state with MakeCallback and fs module", function (t) {
         t.equal(namespace.get('test'), 'watchFile', "state has been mutated");
 
         fs.watchFile(FILENAME,
-                     {persistent : false, interval : 20},
+                     {persistent : false, interval : 1},
                      function (before, after) {
           t.equal(namespace.get('test'), 'watchFile',
                   "mutated state has persisted to fs.watchFile's callback");
