@@ -59,6 +59,14 @@ Namespace.prototype.run = function (fn) {
   }
 };
 
+Namespace.prototype.runAndReturn = function (fn) {
+  var value;
+  this.run(function (context) {
+    value = fn(context);
+  });
+  return value;
+};
+
 Namespace.prototype.bind = function (fn, context) {
   if (!context) {
     if (!this.active) {
