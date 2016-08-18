@@ -49,8 +49,13 @@ Namespace.prototype.run = function (fn) {
     return context;
   }
   catch (exception) {
-    if (exception) {
-      exception[ERROR_SYMBOL] = context;
+    if (exception && !exception[ERROR_SYMBOL]) {
+      Object.defineProperty(exception, ERROR_SYMBOL, {
+        configurable: true,
+        enumerable: false,
+        writable: false,
+        value: context
+      });
     }
     throw exception;
   }
@@ -76,8 +81,13 @@ Namespace.prototype.bind = function (fn, context) {
       return fn.apply(this, arguments);
     }
     catch (exception) {
-      if (exception) {
-        exception[ERROR_SYMBOL] = context;
+      if (exception && !exception[ERROR_SYMBOL]) {
+        Object.defineProperty(exception, ERROR_SYMBOL, {
+          configurable: true,
+          enumerable: false,
+          writable: false,
+          value: context
+        });
       }
       throw exception;
     }
