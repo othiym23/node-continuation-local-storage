@@ -79,7 +79,6 @@ test("continuation-local state with MakeCallback and fs module", function (t) {
   var namespace = createNamespace('fs');
   namespace.run(function () {
     namespace.set('test', 0xabad1dea);
-
     t.test("fs.rename", function (t) {
       createFile(t);
 
@@ -865,9 +864,12 @@ test("continuation-local state with MakeCallback and fs module", function (t) {
         namespace.set('test', 'watchFile');
         t.equal(namespace.get('test'), 'watchFile', "state has been mutated");
 
-        fs.watchFile(FILENAME,
-                     {persistent : false, interval : 20},
-                     function (before, after) {
+        var options = {
+          persistent: true,
+          interval: 20
+        };
+
+        fs.watchFile(FILENAME, options, function (before, after) {
           t.equal(namespace.get('test'), 'watchFile',
                   "mutated state has persisted to fs.watchFile's callback");
 
