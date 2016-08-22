@@ -11,6 +11,7 @@ test("continuation-local storage glue with a throw in the continuation chain",
   namespace.run(function () {
     var d = domain.create();
     namespace.set('outer', true);
+    namespace.bindEmitter(d);
 
     d.on('error', function (blerg) {
       t.equal(blerg.message, "explicitly nonlocal exit", "got the expected exception");
@@ -86,8 +87,9 @@ test("throw in process.nextTick attaches the context", function (t) {
   t.plan(3);
 
   var namespace = cls.createNamespace('cls@nexttick');
-
   var d = domain.create();
+  namespace.bindEmitter(d);
+
   d.on('error', function (e) {
     t.ok(namespace.fromException(e), "context was attached to error");
     t.equal(namespace.fromException(e)['value'], 'transaction set',
@@ -114,15 +116,16 @@ test("throw in process.nextTick attaches the context", function (t) {
 test("throw in setTimeout attaches the context", function (t) {
   t.plan(3);
 
-  var namespace = cls.createNamespace('cls@nexttick');
+  var namespace = cls.createNamespace('cls@setTimeout');
   var d = domain.create();
+  namespace.bindEmitter(d);
 
   d.on('error', function (e) {
     t.ok(namespace.fromException(e), "context was attached to error");
     t.equal(namespace.fromException(e)['value'], 'transaction set',
             "found the inner value");
 
-    cls.destroyNamespace('cls@nexttick');
+    cls.destroyNamespace('cls@setTimeout');
   });
 
   namespace.run(function () {
@@ -132,7 +135,7 @@ test("throw in setTimeout attaches the context", function (t) {
     setTimeout(d.bind(function () {
       namespace.run(function () {
         namespace.set('value', 'transaction set');
-        throw new Error("cls@nexttick explosion");
+        throw new Error("cls@setTimeout explosion");
       });
     }));
 
