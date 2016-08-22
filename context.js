@@ -17,7 +17,7 @@ if (!process.addAsyncListener) require('async-listener');
 function Namespace(name) {
   this.name   = name;
   // changed in 2.7: no default context
-  this.active = null;
+  this.active = Object.create(null);
   this._set   = [];
   this.id     = null;
 }
@@ -70,7 +70,7 @@ Namespace.prototype.runAndReturn = function (fn) {
 Namespace.prototype.bind = function (fn, context) {
   if (!context) {
     if (!this.active) {
-      context = Object.create(this.active);
+      context = this.createContext();
     }
     else {
       context = this.active;
