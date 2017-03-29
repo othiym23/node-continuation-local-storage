@@ -28,7 +28,7 @@
   ],
   "license": "BSD-2-Clause",
   "devDependencies": {
-    "tap": "^6.3.2"
+    "tap": "^10.3.1"
   },
   "dependencies": {
     "async-listener": "^0.6.0",
