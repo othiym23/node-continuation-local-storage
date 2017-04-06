@@ -114,7 +114,7 @@ test("throw in process.nextTick attaches the context", function (t) {
 test("throw in setTimeout attaches the context", function (t) {
   t.plan(3);
 
-  var namespace = cls.createNamespace('cls@nexttick');
+  var namespace = cls.createNamespace('cls@settimeout');
   var d = domain.create();
 
   d.on('error', function (e) {
@@ -122,7 +122,7 @@ test("throw in setTimeout attaches the context", function (t) {
     t.equal(namespace.fromException(e)['value'], 'transaction set',
             "found the inner value");
 
-    cls.destroyNamespace('cls@nexttick');
+    cls.destroyNamespace('cls@settimeout');
   });
 
   namespace.run(function () {
@@ -132,10 +132,36 @@ test("throw in setTimeout attaches the context", function (t) {
     setTimeout(d.bind(function () {
       namespace.run(function () {
         namespace.set('value', 'transaction set');
-        throw new Error("cls@nexttick explosion");
+        throw new Error("cls@settimeout explosion");
       });
     }));
 
     t.equal(namespace.get('value'), 'transaction clear', "everything was reset");
+  });
+});
+
+test("errors can be serialized", function (t) {
+  var namespace = cls.createNamespace('cls@serialized');
+  namespace.run(function () {
+    var d = domain.create();
+
+    d.on('error', function (blerg) {
+      var canSerialize = true;
+      try {
+        JSON.stringify(blerg);
+      } catch (e) {
+        canSerialize = false;
+      }
+      t.ok(canSerialize, "errors serialize safely");
+      cls.destroyNamespace('cls@serialized');
+      t.end();
+    });
+
+    // tap is only trying to help
+    process.nextTick(d.bind(function () {
+      namespace.run(function () {
+        throw new Error("explicitly nonlocal exit");
+      });
+    }));
   });
 });
