@@ -17,7 +17,7 @@ if (!process.addAsyncListener) require('async-listener');
 function Namespace(name) {
   this.name   = name;
   // changed in 2.7: no default context
-  this.active = Object.create(null);
+  this.active = null;
   this._set   = [];
   this.id     = null;
 }
