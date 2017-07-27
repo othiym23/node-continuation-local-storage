@@ -49,9 +49,10 @@ Namespace.prototype.run = function (fn) {
     return context;
   }
   catch (exception) {
-    if (exception) {
+    try {
       exception[ERROR_SYMBOL] = context;
     }
+    catch (e) {}
     throw exception;
   }
   finally {
@@ -84,9 +85,10 @@ Namespace.prototype.bind = function (fn, context) {
       return fn.apply(this, arguments);
     }
     catch (exception) {
-      if (exception) {
+      try {
         exception[ERROR_SYMBOL] = context;
       }
+      catch (e) {}
       throw exception;
     }
     finally {
@@ -161,7 +163,7 @@ Namespace.prototype.bindEmitter = function (emitter) {
  * @param {Error} exception Possibly annotated error.
  */
 Namespace.prototype.fromException = function (exception) {
-  return exception[ERROR_SYMBOL];
+  return exception && exception[ERROR_SYMBOL];
 };
 
 function get(name) {
