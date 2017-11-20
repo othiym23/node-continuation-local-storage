@@ -17,7 +17,7 @@ if (crypto) {
     namespace.run(function () {
       namespace.set('test', 0xabad1dea);
 
-      t.test("deflate", function (t) {
+      t.test("randomBytes", function (t) {
         namespace.run(function () {
           namespace.set('test', 42);
           crypto.randomBytes(100, function (err) {
@@ -37,7 +37,7 @@ if (crypto) {
     namespace.run(function () {
       namespace.set('test', 0xabad1dea);
 
-      t.test("deflate", function (t) {
+      t.test("pseudoRandomBytes", function (t) {
         namespace.run(function () {
           namespace.set('test', 42);
           crypto.pseudoRandomBytes(100, function (err) {
@@ -57,10 +57,10 @@ if (crypto) {
     namespace.run(function () {
       namespace.set('test', 0xabad1dea);
 
-      t.test("deflate", function (t) {
+      t.test("pbkdf2", function (t) {
         namespace.run(function () {
           namespace.set('test', 42);
-          crypto.pbkdf2("s3cr3tz", "451243", 10, 40, function (err) {
+          crypto.pbkdf2("s3cr3tz", "451243", 10, 40, "sha512", function (err) {
             if (err) throw err;
             t.equal(namespace.get('test'), 42, "mutated state was preserved");
             t.end();
