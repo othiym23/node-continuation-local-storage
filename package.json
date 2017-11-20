@@ -32,6 +32,6 @@
   },
   "dependencies": {
     "async-listener": "^0.6.0",
-    "emitter-listener": "^1.1.0"
+    "emitter-listener": "^1.1.1"
   }
 }
