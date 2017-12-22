@@ -32,7 +32,7 @@
     "tap": "^10.3.1"
   },
   "dependencies": {
-    "async-listener": "^0.6.0",
+    "async-listener": "^0.6.9",
     "emitter-listener": "^1.1.1"
   }
 }
