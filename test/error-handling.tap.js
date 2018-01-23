@@ -83,6 +83,31 @@ test("synchronous throw checks if error exists", function (t) {
   cls.destroyNamespace('cls@synchronous-null-error');
 });
 
+test("synchronous throw doesn't attach context", function (t) {
+  t.plan(2);
+
+  var namespace = cls.createNamespace('cls@synchronous-not-attached', {
+    injectErrorContext: false
+  });
+
+  namespace.run(function () {
+    namespace.set('value', 'transaction clear');
+    try {
+      namespace.run(function () {
+        namespace.set('value', 'transaction set');
+        throw new Error('cls@synchronous explosion');
+      });
+    }
+    catch (e) {
+      t.notOk(namespace.fromException(e), "context was not attached to error");
+    }
+
+    t.equal(namespace.get('value'), 'transaction clear', "everything was reset");
+  });
+
+  cls.destroyNamespace('cls@synchronous-not-attached');
+});
+
 test("throw in process.nextTick attaches the context", function (t) {
   t.plan(3);
 

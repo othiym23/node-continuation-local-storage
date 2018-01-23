@@ -14,12 +14,13 @@ var ERROR_SYMBOL = 'error@context';
 // load polyfill if native support is unavailable
 if (!process.addAsyncListener) require('async-listener');
 
-function Namespace(name) {
-  this.name   = name;
+function Namespace(name, injectErrorContext) {
+  this.name               = name;
   // changed in 2.7: no default context
-  this.active = null;
-  this._set   = [];
-  this.id     = null;
+  this.active             = null;
+  this._set               = [];
+  this.id                 = null;
+  this.injectErrorContext = injectErrorContext;
 }
 
 Namespace.prototype.set = function (key, value) {
@@ -49,7 +50,7 @@ Namespace.prototype.run = function (fn) {
     return context;
   }
   catch (exception) {
-    if (exception) {
+    if (this.injectErrorContext && exception) {
       exception[ERROR_SYMBOL] = context;
     }
     throw exception;
@@ -84,7 +85,7 @@ Namespace.prototype.bind = function (fn, context) {
       return fn.apply(this, arguments);
     }
     catch (exception) {
-      if (exception) {
+      if (this.injectErrorContext && exception) {
         exception[ERROR_SYMBOL] = context;
       }
       throw exception;
@@ -168,10 +169,16 @@ function get(name) {
   return process.namespaces[name];
 }
 
-function create(name) {
+function create(name, options) {
   assert.ok(name, "namespace must be given a name!");
 
-  var namespace = new Namespace(name);
+  options = options || {};
+  // `== null` tests for `null` and `undefined`
+  if (options.injectErrorContext == null) {
+    options.injectErrorContext = true;
+  }
+
+  var namespace = new Namespace(name, options.injectErrorContext);
   namespace.id = process.addAsyncListener({
     create : function () { return namespace.active; },
     before : function (context, storage) { if (storage) namespace.enter(storage); },

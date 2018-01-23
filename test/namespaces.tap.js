@@ -6,7 +6,7 @@ var test = tap.test;
 var context = require('../context.js');
 
 test("namespace management", function (t) {
-  t.plan(8);
+  t.plan(10);
 
   t.throws(function () { context.createNamespace(); }, "name is required");
 
@@ -26,4 +26,9 @@ test("namespace management", function (t) {
                  "destroying works");
 
   t.notOk(process.namespaces.another, "namespace has been removed");
+
+  t.ok(namespace.injectErrorContext, "defaults to injecting error context");
+
+  namespace = context.createNamespace('explictOption', { injectErrorContext: false });
+  t.notOk(namespace.injectErrorContext, "setting injectErrorContext works");
 });
