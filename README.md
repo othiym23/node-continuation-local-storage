@@ -112,6 +112,24 @@ function requestHandler() {
 }
 ```
 
+Middleware for context logging in express application:
+
+```javascript
+const createNamespace = require('continuation-local-storage').createNamespace;
+const storage = createNamespace('requests');
+
+function contextMiddleware(req, res, next) {
+  const reqId = req.headers['x-request-id'];
+  req.id = reqId;
+  storage.bindEmitter(req);
+  storage.bindEmitter(res);
+  storage.run(() => {
+    storage.set('requestId', reqId);
+    next();
+  });
+}
+```
+
 ## cls.createNamespace(name)
 
 * return: {Namespace}
